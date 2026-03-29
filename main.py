@@ -49,6 +49,46 @@ CALCULATORS = [
         "category": "Investment",
         "keywords": "401k match calculator, employer match optimizer, 401k contribution calculator",
     },
+    {
+        "id": "brrrr",
+        "title": "BRRRR Method Calculator",
+        "subtitle": "Analyze Buy, Rehab, Rent, Refinance, Repeat deals step by step",
+        "icon": "home",
+        "category": "Real Estate",
+        "keywords": "brrrr calculator, brrrr method, buy rehab rent refinance repeat",
+    },
+    {
+        "id": "rental-cashflow",
+        "title": "Rental Property Cash-on-Cash Return",
+        "subtitle": "Calculate your true return on invested capital for rental properties",
+        "icon": "building",
+        "category": "Real Estate",
+        "keywords": "cash on cash return calculator, rental property ROI, rental yield calculator",
+    },
+    {
+        "id": "fire-variable",
+        "title": "FIRE Number Calculator (Variable Spending)",
+        "subtitle": "Plan for different spending phases in early retirement",
+        "icon": "fire",
+        "category": "FIRE",
+        "keywords": "fire calculator, fire number calculator, financial independence calculator, early retirement",
+    },
+    {
+        "id": "debt-payoff",
+        "title": "Debt Avalanche vs Snowball Calculator",
+        "subtitle": "Compare strategies and find the fastest path to debt freedom",
+        "icon": "credit-card",
+        "category": "Debt",
+        "keywords": "debt avalanche calculator, debt snowball calculator, debt payoff calculator, debt free calculator",
+    },
+    {
+        "id": "se-tax",
+        "title": "Self-Employment Tax Calculator by State",
+        "subtitle": "Estimate your federal + state self-employment tax as a freelancer",
+        "icon": "briefcase",
+        "category": "Tax",
+        "keywords": "self employment tax calculator, freelancer tax calculator, self employed tax by state",
+    },
 ]
 
 

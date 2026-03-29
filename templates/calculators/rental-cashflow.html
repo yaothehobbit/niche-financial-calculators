@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Rental Property Cash-on-Cash Return Calculator{% endblock %}
+{% block description %}Calculate your rental property's true cash-on-cash return, cap rate, and monthly cash flow. Factor in all expenses including vacancy, management, and maintenance.{% endblock %}
+{% block keywords %}cash on cash return calculator, rental property ROI calculator, rental yield calculator, cap rate calculator, rental property cash flow{% endblock %}
+{% block canonical %}/niche_calc/rental-cashflow{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Rental Cash-on-Cash Return</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Rental Property Cash-on-Cash Return</h1>
+                <p class="text-gray-600 mt-2">Know your real return on the cash you invest.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <h3 class="font-bold text-gray-900">Purchase</h3>
+                <div class="input-group">
+                    <label for="price">Purchase Price ($)</label>
+                    <input type="number" id="price" value="250000" min="0" step="5000">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="downPct">Down Payment (%)</label>
+                        <input type="number" id="downPct" value="25" min="0" max="100" step="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="closingPct">Closing Costs (%)</label>
+                        <input type="number" id="closingPct" value="3" min="0" max="10" step="0.5">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="loanRate">Interest Rate (%)</label>
+                        <input type="number" id="loanRate" value="7.0" min="1" max="15" step="0.125">
+                    </div>
+                    <div class="input-group">
+                        <label for="loanTerm">Loan Term (yrs)</label>
+                        <input type="number" id="loanTerm" value="30" min="10" max="30" step="5">
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-gray-900 pt-2">Income</h3>
+                <div class="input-group">
+                    <label for="rent2">Monthly Rent ($)</label>
+                    <input type="number" id="rent2" value="2000" min="0" step="50">
+                </div>
+                <div class="input-group">
+                    <label for="otherIncome3">Other Monthly Income ($)</label>
+                    <input type="number" id="otherIncome3" value="0" min="0" step="25">
+                    <p class="text-xs text-gray-500 mt-1">Laundry, parking, storage, etc.</p>
+                </div>
+
+                <h3 class="font-bold text-gray-900 pt-2">Expenses</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="vac2">Vacancy (%)</label>
+                        <input type="number" id="vac2" value="5" min="0" max="50">
+                    </div>
+                    <div class="input-group">
+                        <label for="mgmt2">Management (%)</label>
+                        <input type="number" id="mgmt2" value="10" min="0" max="30">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="tax2">Annual Taxes ($)</label>
+                        <input type="number" id="tax2" value="3000" min="0" step="100">
+                    </div>
+                    <div class="input-group">
+                        <label for="ins2">Annual Insurance ($)</label>
+                        <input type="number" id="ins2" value="1500" min="0" step="100">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="maint2">Maintenance (%)</label>
+                        <input type="number" id="maint2" value="5" min="0" max="20">
+                        <p class="text-xs text-gray-500">% of rent</p>
+                    </div>
+                    <div class="input-group">
+                        <label for="capex2">CapEx Reserve (%)</label>
+                        <input type="number" id="capex2" value="5" min="0" max="20">
+                        <p class="text-xs text-gray-500">% of rent</p>
+                    </div>
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Calculate Returns
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Cash-on-Cash Return</p>
+                    <p class="text-3xl font-bold mt-1" id="coc2">0%</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Cap Rate</p>
+                    <p class="text-2xl font-bold text-brand-500" id="capRate">0%</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Monthly Cash Flow</p>
+                    <p class="text-2xl font-bold" id="monthlyCF">$0</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Total Cash Invested</p>
+                    <p class="text-lg font-bold" id="cashIn">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">NOI (Annual)</p>
+                    <p class="text-lg font-bold text-green-600" id="noi">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Mortgage Payment</p>
+                    <p class="text-lg font-bold text-red-600" id="mortgage">$0</p>
+                </div>
+            </div>
+
+            <!-- 1% and 50% rule checks -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-4" id="onePercentRule">
+                    <p class="text-sm text-gray-500">1% Rule</p>
+                    <p class="text-lg font-bold" id="onePctText">--</p>
+                    <p class="text-xs text-gray-400">Rent / Purchase Price</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4" id="fiftyPercentRule">
+                    <p class="text-sm text-gray-500">50% Rule Check</p>
+                    <p class="text-lg font-bold" id="fiftyPctText">--</p>
+                    <p class="text-xs text-gray-400">Operating expenses / Gross rent</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Income vs Expenses</h3>
+                <canvas id="rentChart" height="200"></canvas>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Monthly Breakdown</h3>
+                <div id="breakdownTable" class="space-y-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>Understanding Cash-on-Cash Return</h2>
+        <p>Cash-on-cash return measures the annual pre-tax cash flow relative to the total cash invested. It answers: "What percentage return am I getting on the actual dollars I put in?"</p>
+        <p><strong>Formula:</strong> CoC = Annual Cash Flow / Total Cash Invested</p>
+
+        <h3>Cap Rate vs Cash-on-Cash Return</h3>
+        <ul>
+            <li><strong>Cap Rate</strong> = NOI / Purchase Price (ignores financing)</li>
+            <li><strong>Cash-on-Cash</strong> = Cash Flow / Cash Invested (includes financing effects)</li>
+        </ul>
+        <p>Leverage amplifies your CoC return. A property with a 6% cap rate financed at 75% LTV might yield a 10%+ CoC return because you're only investing 25% of the price.</p>
+
+        <h3>Rules of Thumb</h3>
+        <ul>
+            <li><strong>1% Rule:</strong> Monthly rent should be at least 1% of the purchase price</li>
+            <li><strong>50% Rule:</strong> Operating expenses (excluding mortgage) typically run about 50% of gross rent</li>
+            <li><strong>Good CoC Return:</strong> 8-12%+ is generally considered good for rental properties</li>
+        </ul>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Rental Property Cash-on-Cash Return Calculator",
+    "url": "https://www.rsfundmanagement.com/niche_calc/rental-cashflow",
+    "description": "Calculate rental property cash-on-cash return, cap rate, and monthly cash flow with full expense breakdown.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let chart = null;
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function calculate() {
+    const price = parseFloat(document.getElementById('price').value) || 0;
+    const downPct = parseFloat(document.getElementById('downPct').value) / 100;
+    const closingPct = parseFloat(document.getElementById('closingPct').value) / 100;
+    const rate = parseFloat(document.getElementById('loanRate').value) / 100;
+    const term = parseInt(document.getElementById('loanTerm').value);
+    const rent = parseFloat(document.getElementById('rent2').value) || 0;
+    const otherInc = parseFloat(document.getElementById('otherIncome3').value) || 0;
+    const vacPct = parseFloat(document.getElementById('vac2').value) / 100;
+    const mgmtPct = parseFloat(document.getElementById('mgmt2').value) / 100;
+    const annTax = parseFloat(document.getElementById('tax2').value) || 0;
+    const annIns = parseFloat(document.getElementById('ins2').value) || 0;
+    const maintPct = parseFloat(document.getElementById('maint2').value) / 100;
+    const capexPct = parseFloat(document.getElementById('capex2').value) / 100;
+
+    const downPayment = price * downPct;
+    const closingCosts = price * closingPct;
+    const cashInvested = downPayment + closingCosts;
+    const loanAmount = price - downPayment;
+
+    // Mortgage
+    const mr = rate / 12;
+    const n = term * 12;
+    const mortPmt = loanAmount > 0 ? loanAmount * (mr * Math.pow(1 + mr, n)) / (Math.pow(1 + mr, n) - 1) : 0;
+
+    // Income
+    const grossRent = rent + otherInc;
+    const effectiveRent = grossRent * (1 - vacPct);
+
+    // Expenses
+    const mgmt = effectiveRent * mgmtPct;
+    const maint = rent * maintPct;
+    const capex = rent * capexPct;
+    const moTax = annTax / 12;
+    const moIns = annIns / 12;
+    const opEx = mgmt + maint + capex + moTax + moIns;
+    const noi = (effectiveRent - opEx) * 12;
+    const annCF = (effectiveRent - opEx - mortPmt) * 12;
+    const moCF = annCF / 12;
+
+    const coc = cashInvested > 0 ? (annCF / cashInvested * 100) : 0;
+    const capRt = price > 0 ? (noi / price * 100) : 0;
+
+    document.getElementById('coc2').textContent = coc.toFixed(1) + '%';
+    document.getElementById('capRate').textContent = capRt.toFixed(1) + '%';
+    document.getElementById('monthlyCF').textContent = fmt(moCF);
+    document.getElementById('monthlyCF').className = `text-2xl font-bold ${moCF >= 0 ? 'text-green-600' : 'text-red-600'}`;
+    document.getElementById('cashIn').textContent = fmt(cashInvested);
+    document.getElementById('noi').textContent = fmt(noi);
+    document.getElementById('mortgage').textContent = fmt(mortPmt) + '/mo';
+
+    // 1% rule
+    const onePct = price > 0 ? (rent / price * 100) : 0;
+    const onePctEl = document.getElementById('onePctText');
+    onePctEl.textContent = onePct.toFixed(2) + '%';
+    onePctEl.className = `text-lg font-bold ${onePct >= 1 ? 'text-green-600' : 'text-red-600'}`;
+
+    // 50% rule
+    const fiftyPct = effectiveRent > 0 ? (opEx / effectiveRent * 100) : 0;
+    const fiftyEl = document.getElementById('fiftyPctText');
+    fiftyEl.textContent = fiftyPct.toFixed(0) + '% of rent';
+    fiftyEl.className = `text-lg font-bold ${fiftyPct <= 55 ? 'text-green-600' : 'text-yellow-600'}`;
+
+    // Chart
+    const items = [
+        { l: 'Effective Rent', v: effectiveRent, c: '#16a34a' },
+        { l: 'Mortgage', v: mortPmt, c: '#ef4444' },
+        { l: 'Management', v: mgmt, c: '#f97316' },
+        { l: 'Taxes', v: moTax, c: '#eab308' },
+        { l: 'Insurance', v: moIns, c: '#8b5cf6' },
+        { l: 'Maintenance', v: maint, c: '#6366f1' },
+        { l: 'CapEx Reserve', v: capex, c: '#ec4899' },
+    ];
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('rentChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: items.map(i => i.l),
+            datasets: [{ data: items.map(i => Math.round(i.v)), backgroundColor: items.map(i => i.c) }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) + '/mo' } } },
+            scales: { y: { ticks: { callback: v => fmt(v) } } }
+        }
+    });
+
+    document.getElementById('breakdownTable').innerHTML =
+        `<div class="flex justify-between text-sm text-green-700 font-medium"><span>Effective Rent</span><span>+${fmt(effectiveRent)}/mo</span></div>` +
+        items.slice(1).map(i => `<div class="flex justify-between text-sm text-red-600"><span>${i.l}</span><span>-${fmt(i.v)}/mo</span></div>`).join('') +
+        `<div class="flex justify-between text-sm font-bold border-t pt-2 mt-2"><span>Net Cash Flow</span><span class="${moCF >= 0 ? 'text-green-700' : 'text-red-700'}">${fmt(moCF)}/mo (${fmt(annCF)}/yr)</span></div>`;
+}
+
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+calculate();
+</script>
+{% endblock %}

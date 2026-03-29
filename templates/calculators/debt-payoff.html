@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Debt Avalanche vs Snowball Calculator{% endblock %}
+{% block description %}Compare debt avalanche and snowball payoff strategies side by side. See which saves more interest and which gets you debt-free faster.{% endblock %}
+{% block keywords %}debt avalanche calculator, debt snowball calculator, debt payoff calculator, debt free calculator, debt payoff comparison{% endblock %}
+{% block canonical %}/niche_calc/debt-payoff{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Debt Avalanche vs Snowball</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Debt Avalanche vs Snowball</h1>
+                <p class="text-gray-600 mt-2">Compare strategies and find the fastest path to debt freedom.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <h3 class="font-bold text-gray-900">Your Debts</h3>
+                <div id="debtList" class="space-y-3"></div>
+                <button onclick="addDebt()" class="w-full border-2 border-dashed border-gray-300 rounded-lg py-2 text-gray-500 hover:border-brand-500 hover:text-brand-500 transition text-sm">
+                    + Add Another Debt
+                </button>
+
+                <hr class="my-4">
+                <div class="input-group">
+                    <label for="extraPayment">Extra Monthly Payment ($)</label>
+                    <input type="number" id="extraPayment" value="500" min="0" step="50">
+                    <p class="text-xs text-gray-500 mt-1">Amount above minimum payments to throw at debt</p>
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Compare Strategies
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-red-50 border-2 border-red-200 rounded-xl p-5">
+                    <p class="text-sm font-bold text-red-800">Avalanche (highest rate first)</p>
+                    <p class="text-2xl font-bold text-red-700 mt-1" id="avalMonths">-- months</p>
+                    <p class="text-sm text-red-600" id="avalInterest">$0 total interest</p>
+                </div>
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-5">
+                    <p class="text-sm font-bold text-blue-800">Snowball (smallest balance first)</p>
+                    <p class="text-2xl font-bold text-blue-700 mt-1" id="snowMonths">-- months</p>
+                    <p class="text-sm text-blue-600" id="snowInterest">$0 total interest</p>
+                </div>
+            </div>
+
+            <div class="result-card rounded-xl p-5 text-white">
+                <p class="text-sm opacity-80">Avalanche Saves You</p>
+                <p class="text-3xl font-bold mt-1" id="savings">$0</p>
+                <p class="text-sm opacity-80 mt-1" id="savingsDetail">in interest and 0 months faster</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Total Debt</p>
+                    <p class="text-lg font-bold" id="totalDebt">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Total Min Payments</p>
+                    <p class="text-lg font-bold" id="totalMin">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Avg Interest Rate</p>
+                    <p class="text-lg font-bold" id="avgRate">0%</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Balance Over Time</h3>
+                <canvas id="debtChart" height="250"></canvas>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Payoff Order</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-bold text-red-700 text-sm mb-2">Avalanche Order</h4>
+                        <ol class="text-sm space-y-1" id="avalOrder"></ol>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-blue-700 text-sm mb-2">Snowball Order</h4>
+                        <ol class="text-sm space-y-1" id="snowOrder"></ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>Debt Avalanche vs Debt Snowball: Which is Better?</h2>
+        <p>Both strategies help you pay off debt faster by focusing extra payments on one debt at a time. The difference is which debt you target first.</p>
+
+        <h3>Debt Avalanche Method</h3>
+        <p>Pay minimum on all debts, then put all extra money toward the debt with the <strong>highest interest rate</strong>. Once that's paid off, roll everything into the next highest rate. This method saves the most money mathematically because you eliminate the most expensive debt first.</p>
+
+        <h3>Debt Snowball Method</h3>
+        <p>Pay minimum on all debts, then put all extra money toward the debt with the <strong>smallest balance</strong>. The psychological wins from quickly eliminating entire debts can keep you motivated. Dave Ramsey popularized this approach.</p>
+
+        <h3>Which Should You Choose?</h3>
+        <ul>
+            <li><strong>Avalanche</strong> if you're disciplined and want to save the most money</li>
+            <li><strong>Snowball</strong> if you need quick wins to stay motivated</li>
+            <li>The difference is often small — the most important thing is committing to a strategy</li>
+        </ul>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Debt Avalanche vs Snowball Calculator",
+    "url": "https://www.rsfundmanagement.com/niche_calc/debt-payoff",
+    "description": "Compare debt avalanche and debt snowball strategies side by side. See interest saved and time to debt freedom.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let chart = null;
+let debtCount = 0;
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function addDebt(name='', balance=0, rate=0, minPay=0) {
+    debtCount++;
+    const id = debtCount;
+    const div = document.createElement('div');
+    div.id = `debt-${id}`;
+    div.className = 'bg-gray-50 rounded-lg p-3 space-y-2 relative';
+    div.innerHTML = `
+        <button onclick="this.parentElement.remove(); calculate()" class="absolute top-1 right-2 text-gray-400 hover:text-red-500 text-lg">&times;</button>
+        <input type="text" class="debt-name w-full border rounded px-2 py-1 text-sm font-bold" placeholder="Debt name" value="${name}">
+        <div class="grid grid-cols-3 gap-2">
+            <div class="input-group">
+                <label class="text-xs">Balance ($)</label>
+                <input type="number" class="debt-bal text-sm" value="${balance}" min="0" step="100">
+            </div>
+            <div class="input-group">
+                <label class="text-xs">APR (%)</label>
+                <input type="number" class="debt-rate text-sm" value="${rate}" min="0" max="40" step="0.1">
+            </div>
+            <div class="input-group">
+                <label class="text-xs">Min Payment ($)</label>
+                <input type="number" class="debt-min text-sm" value="${minPay}" min="0" step="10">
+            </div>
+        </div>
+    `;
+    document.getElementById('debtList').appendChild(div);
+    div.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+}
+
+// Default debts
+addDebt('Credit Card', 8000, 22.99, 200);
+addDebt('Car Loan', 15000, 6.5, 350);
+addDebt('Student Loan', 25000, 5.0, 280);
+
+function getDebts() {
+    const debts = [];
+    document.querySelectorAll('#debtList > div').forEach(div => {
+        const name = div.querySelector('.debt-name').value || 'Unnamed';
+        const bal = parseFloat(div.querySelector('.debt-bal').value) || 0;
+        const rate = parseFloat(div.querySelector('.debt-rate').value) || 0;
+        const minPay = parseFloat(div.querySelector('.debt-min').value) || 0;
+        if (bal > 0) debts.push({ name, balance: bal, rate, minPay });
+    });
+    return debts;
+}
+
+function simulate(debts, extra, sortFn) {
+    let balances = debts.map(d => ({ ...d }));
+    let totalInterest = 0;
+    let months = 0;
+    const maxMonths = 600; // 50 year cap
+    const history = [balances.reduce((s, d) => s + d.balance, 0)];
+
+    while (balances.some(d => d.balance > 0) && months < maxMonths) {
+        months++;
+
+        // Apply interest
+        for (const d of balances) {
+            if (d.balance > 0) {
+                const interest = d.balance * (d.rate / 100 / 12);
+                d.balance += interest;
+                totalInterest += interest;
+            }
+        }
+
+        // Pay minimums
+        let availExtra = extra;
+        for (const d of balances) {
+            if (d.balance > 0) {
+                const payment = Math.min(d.minPay, d.balance);
+                d.balance -= payment;
+                if (d.balance < 0.01) d.balance = 0;
+            }
+        }
+
+        // Sort active debts and apply extra to target
+        const active = balances.filter(d => d.balance > 0);
+        if (active.length > 0) {
+            active.sort(sortFn);
+            let remaining = availExtra;
+            for (const d of active) {
+                const pay = Math.min(remaining, d.balance);
+                d.balance -= pay;
+                remaining -= pay;
+                if (d.balance < 0.01) d.balance = 0;
+                if (remaining <= 0) break;
+            }
+        }
+
+        history.push(balances.reduce((s, d) => s + d.balance, 0));
+    }
+
+    return { months, totalInterest, history };
+}
+
+function calculate() {
+    const debts = getDebts();
+    if (debts.length === 0) return;
+
+    const extra = parseFloat(document.getElementById('extraPayment').value) || 0;
+    const totalDebt = debts.reduce((s, d) => s + d.balance, 0);
+    const totalMin = debts.reduce((s, d) => s + d.minPay, 0);
+    const avgRate = debts.reduce((s, d) => s + d.rate * d.balance, 0) / totalDebt;
+
+    // Avalanche: highest rate first
+    const aval = simulate(debts, extra, (a, b) => b.rate - a.rate);
+    // Snowball: smallest balance first
+    const snow = simulate(debts, extra, (a, b) => a.balance - b.balance);
+
+    const interestSaved = snow.totalInterest - aval.totalInterest;
+    const monthsSaved = snow.months - aval.months;
+
+    document.getElementById('totalDebt').textContent = fmt(totalDebt);
+    document.getElementById('totalMin').textContent = fmt(totalMin) + '/mo';
+    document.getElementById('avgRate').textContent = avgRate.toFixed(1) + '%';
+
+    document.getElementById('avalMonths').textContent = aval.months + ' months';
+    document.getElementById('avalInterest').textContent = fmt(aval.totalInterest) + ' total interest';
+    document.getElementById('snowMonths').textContent = snow.months + ' months';
+    document.getElementById('snowInterest').textContent = fmt(snow.totalInterest) + ' total interest';
+
+    document.getElementById('savings').textContent = fmt(Math.abs(interestSaved));
+    document.getElementById('savingsDetail').textContent = interestSaved >= 0
+        ? `in interest and ${Math.abs(monthsSaved)} month${Math.abs(monthsSaved) !== 1 ? 's' : ''} faster`
+        : `(Snowball is cheaper in this case by ${fmt(Math.abs(interestSaved))})`;
+
+    // Payoff order
+    const avalOrder = [...debts].sort((a, b) => b.rate - a.rate);
+    const snowOrder = [...debts].sort((a, b) => a.balance - b.balance);
+    document.getElementById('avalOrder').innerHTML = avalOrder.map((d, i) =>
+        `<li class="flex justify-between"><span>${i + 1}. ${d.name}</span><span class="text-gray-500">${d.rate}%</span></li>`
+    ).join('');
+    document.getElementById('snowOrder').innerHTML = snowOrder.map((d, i) =>
+        `<li class="flex justify-between"><span>${i + 1}. ${d.name}</span><span class="text-gray-500">${fmt(d.balance)}</span></li>`
+    ).join('');
+
+    // Chart
+    const maxLen = Math.max(aval.history.length, snow.history.length);
+    const labels = Array.from({ length: maxLen }, (_, i) => i);
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('debtChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Avalanche',
+                    data: aval.history,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220,38,38,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                },
+                {
+                    label: 'Snowball',
+                    data: snow.history,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37,99,235,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: 'Months' } },
+                y: { title: { display: true, text: 'Total Balance' }, ticks: { callback: v => fmt(v) } }
+            },
+            plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } } }
+        }
+    });
+}
+
+document.getElementById('extraPayment').addEventListener('input', calculate);
+calculate();
+</script>
+{% endblock %}

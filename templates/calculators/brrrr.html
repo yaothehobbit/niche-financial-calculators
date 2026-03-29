@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}BRRRR Method Calculator{% endblock %}
+{% block description %}Analyze BRRRR (Buy, Rehab, Rent, Refinance, Repeat) real estate deals. Calculate ARV, cash-on-cash return, and money left in the deal after refinance.{% endblock %}
+{% block keywords %}brrrr calculator, brrrr method calculator, buy rehab rent refinance repeat, brrrr real estate calculator, brrrr analysis{% endblock %}
+{% block canonical %}/niche_calc/brrrr{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">BRRRR Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">BRRRR Method Calculator</h1>
+                <p class="text-gray-600 mt-2">Analyze each step: Buy, Rehab, Rent, Refinance, Repeat.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <h3 class="font-bold text-gray-900 flex items-center gap-2"><span class="w-6 h-6 bg-brand-500 text-white rounded-full text-xs flex items-center justify-center">1</span> Buy</h3>
+                <div class="input-group">
+                    <label for="purchasePrice">Purchase Price ($)</label>
+                    <input type="number" id="purchasePrice" value="150000" min="0" step="5000">
+                </div>
+                <div class="input-group">
+                    <label for="closingBuy">Closing Costs - Buy (%)</label>
+                    <input type="number" id="closingBuy" value="3" min="0" max="10" step="0.5">
+                </div>
+
+                <h3 class="font-bold text-gray-900 flex items-center gap-2 pt-2"><span class="w-6 h-6 bg-brand-500 text-white rounded-full text-xs flex items-center justify-center">2</span> Rehab</h3>
+                <div class="input-group">
+                    <label for="rehabCost">Rehab Cost ($)</label>
+                    <input type="number" id="rehabCost" value="30000" min="0" step="1000">
+                </div>
+                <div class="input-group">
+                    <label for="arv">After Repair Value (ARV) ($)</label>
+                    <input type="number" id="arv" value="220000" min="0" step="5000">
+                </div>
+
+                <h3 class="font-bold text-gray-900 flex items-center gap-2 pt-2"><span class="w-6 h-6 bg-brand-500 text-white rounded-full text-xs flex items-center justify-center">3</span> Rent</h3>
+                <div class="input-group">
+                    <label for="monthlyRent">Monthly Rent ($)</label>
+                    <input type="number" id="monthlyRent" value="1800" min="0" step="50">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="vacancy">Vacancy (%)</label>
+                        <input type="number" id="vacancy" value="5" min="0" max="50" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="mgmtFee">Property Mgmt (%)</label>
+                        <input type="number" id="mgmtFee" value="10" min="0" max="30" step="1">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="taxes">Annual Taxes ($)</label>
+                        <input type="number" id="taxes" value="2400" min="0" step="100">
+                    </div>
+                    <div class="input-group">
+                        <label for="insurance">Annual Insurance ($)</label>
+                        <input type="number" id="insurance" value="1200" min="0" step="100">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="maintenance">Annual Maintenance ($)</label>
+                    <input type="number" id="maintenance" value="2000" min="0" step="200">
+                </div>
+
+                <h3 class="font-bold text-gray-900 flex items-center gap-2 pt-2"><span class="w-6 h-6 bg-brand-500 text-white rounded-full text-xs flex items-center justify-center">4</span> Refinance</h3>
+                <div class="input-group">
+                    <label for="ltvRefi">Refinance LTV (%)</label>
+                    <input type="number" id="ltvRefi" value="75" min="50" max="95" step="5">
+                    <p class="text-xs text-gray-500 mt-1">Most lenders: 75% of ARV</p>
+                </div>
+                <div class="input-group">
+                    <label for="refiRate">Refinance Interest Rate (%)</label>
+                    <input type="number" id="refiRate" value="7.0" min="1" max="15" step="0.125">
+                </div>
+                <div class="input-group">
+                    <label for="refiTerm">Loan Term (years)</label>
+                    <input type="number" id="refiTerm" value="30" min="10" max="30" step="5">
+                </div>
+                <div class="input-group">
+                    <label for="closingRefi">Closing Costs - Refi (%)</label>
+                    <input type="number" id="closingRefi" value="2" min="0" max="10" step="0.5">
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Analyze BRRRR Deal
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 space-y-6">
+            <!-- Key metric -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Money Left in Deal</p>
+                    <p class="text-3xl font-bold mt-1" id="moneyLeft">$0</p>
+                    <p class="text-sm opacity-80 mt-1" id="moneyLeftPct">0% of total invested</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Cash-on-Cash Return</p>
+                    <p class="text-3xl font-bold text-green-600 mt-1" id="cocReturn">0%</p>
+                    <p class="text-sm text-gray-500 mt-1">on money left in deal</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Total Invested</p>
+                    <p class="text-lg font-bold" id="totalInvested">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Refi Loan Amount</p>
+                    <p class="text-lg font-bold text-brand-500" id="refiAmount">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Cash Back at Refi</p>
+                    <p class="text-lg font-bold text-green-600" id="cashBack">$0</p>
+                </div>
+            </div>
+
+            <!-- Deal quality indicator -->
+            <div class="bg-white rounded-xl shadow-md p-5" id="dealQuality">
+                <h3 class="font-bold text-gray-900 mb-2">Deal Quality</h3>
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div class="h-4 rounded-full transition-all" id="qualityBar" style="width: 0%"></div>
+                </div>
+                <p class="text-sm mt-2" id="qualityText"></p>
+            </div>
+
+            <!-- Monthly breakdown -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Monthly Cash Flow Breakdown</h3>
+                <canvas id="cashflowChart" height="200"></canvas>
+                <div class="mt-4 space-y-2" id="cashflowTable"></div>
+            </div>
+
+            <!-- BRRRR Steps Summary -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">BRRRR Steps Summary</h3>
+                <table class="w-full text-sm">
+                    <tbody id="stepsTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>What is the BRRRR Method?</h2>
+        <p>BRRRR stands for Buy, Rehab, Rent, Refinance, Repeat. It's a real estate investment strategy that allows investors to recycle their capital across multiple properties by pulling out their initial investment through refinancing.</p>
+
+        <h3>The 5 Steps</h3>
+        <ol>
+            <li><strong>Buy:</strong> Purchase a property below market value (distressed, foreclosure, motivated seller)</li>
+            <li><strong>Rehab:</strong> Renovate to increase the property's value to its After Repair Value (ARV)</li>
+            <li><strong>Rent:</strong> Find tenants and stabilize rental income</li>
+            <li><strong>Refinance:</strong> Get a new loan based on the higher ARV (typically 75% LTV), pulling out most or all of your initial investment</li>
+            <li><strong>Repeat:</strong> Use the cash you pulled out to buy the next property</li>
+        </ol>
+
+        <h3>The 75% ARV Rule</h3>
+        <p>Most lenders will refinance at 75% of the appraised value (ARV). For the BRRRR method to work optimally, your total investment (purchase + rehab + closing costs) should be at or below 75% of the ARV. This allows you to pull out all your cash at refinancing.</p>
+
+        <h3>Key Metrics</h3>
+        <ul>
+            <li><strong>Money Left in Deal:</strong> How much of your cash remains after refinancing. Ideally $0 (you got all your money back)</li>
+            <li><strong>Cash-on-Cash Return:</strong> Annual cash flow divided by money left in deal. If you got all cash back, this is technically infinite</li>
+            <li><strong>Monthly Cash Flow:</strong> Rent minus all expenses (mortgage, taxes, insurance, management, maintenance, vacancy)</li>
+        </ul>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "BRRRR Method Calculator",
+    "url": "https://www.rsfundmanagement.com/niche_calc/brrrr",
+    "description": "Analyze BRRRR real estate deals. Calculate ARV, cash-on-cash return, and money left after refinance.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let chart = null;
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function calculate() {
+    const purchase = parseFloat(document.getElementById('purchasePrice').value) || 0;
+    const closingBuyPct = parseFloat(document.getElementById('closingBuy').value) / 100;
+    const rehab = parseFloat(document.getElementById('rehabCost').value) || 0;
+    const arv = parseFloat(document.getElementById('arv').value) || 0;
+    const rent = parseFloat(document.getElementById('monthlyRent').value) || 0;
+    const vacancyPct = parseFloat(document.getElementById('vacancy').value) / 100;
+    const mgmtPct = parseFloat(document.getElementById('mgmtFee').value) / 100;
+    const annualTaxes = parseFloat(document.getElementById('taxes').value) || 0;
+    const annualInsurance = parseFloat(document.getElementById('insurance').value) || 0;
+    const annualMaint = parseFloat(document.getElementById('maintenance').value) || 0;
+    const ltvRefi = parseFloat(document.getElementById('ltvRefi').value) / 100;
+    const refiRate = parseFloat(document.getElementById('refiRate').value) / 100;
+    const refiTerm = parseInt(document.getElementById('refiTerm').value);
+    const closingRefiPct = parseFloat(document.getElementById('closingRefi').value) / 100;
+
+    // Step 1: Buy
+    const closingBuy = purchase * closingBuyPct;
+    const totalInvested = purchase + closingBuy + rehab;
+
+    // Step 4: Refinance
+    const refiLoan = arv * ltvRefi;
+    const closingRefi = refiLoan * closingRefiPct;
+    const cashBack = refiLoan - closingRefi;
+    const moneyLeft = Math.max(0, totalInvested - cashBack);
+
+    // Mortgage payment (P&I)
+    const monthlyRate = refiRate / 12;
+    const numPayments = refiTerm * 12;
+    const mortgagePayment = refiLoan * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+
+    // Monthly cash flow
+    const effectiveRent = rent * (1 - vacancyPct);
+    const mgmt = effectiveRent * mgmtPct;
+    const monthlyTaxes = annualTaxes / 12;
+    const monthlyInsurance = annualInsurance / 12;
+    const monthlyMaint = annualMaint / 12;
+    const totalExpenses = mortgagePayment + mgmt + monthlyTaxes + monthlyInsurance + monthlyMaint;
+    const monthlyCashFlow = effectiveRent - totalExpenses;
+    const annualCashFlow = monthlyCashFlow * 12;
+
+    // Cash-on-cash return
+    const coc = moneyLeft > 0 ? (annualCashFlow / moneyLeft * 100) : (annualCashFlow > 0 ? Infinity : 0);
+
+    // Update results
+    document.getElementById('totalInvested').textContent = fmt(totalInvested);
+    document.getElementById('refiAmount').textContent = fmt(refiLoan);
+    document.getElementById('cashBack').textContent = fmt(cashBack);
+    document.getElementById('moneyLeft').textContent = fmt(moneyLeft);
+    document.getElementById('moneyLeftPct').textContent = totalInvested > 0 ? `${(moneyLeft / totalInvested * 100).toFixed(1)}% of total invested` : '0%';
+    document.getElementById('cocReturn').textContent = coc === Infinity ? 'Infinite!' : coc.toFixed(1) + '%';
+
+    // Deal quality
+    const qualityBar = document.getElementById('qualityBar');
+    const qualityText = document.getElementById('qualityText');
+    let quality = 0;
+    if (moneyLeft <= 0) quality += 40; else if (moneyLeft < totalInvested * 0.2) quality += 25; else quality += 10;
+    if (monthlyCashFlow > 300) quality += 30; else if (monthlyCashFlow > 100) quality += 20; else if (monthlyCashFlow > 0) quality += 10;
+    if (coc > 20 || coc === Infinity) quality += 30; else if (coc > 12) quality += 20; else if (coc > 8) quality += 10;
+
+    qualityBar.style.width = quality + '%';
+    qualityBar.className = `h-4 rounded-full transition-all ${quality >= 70 ? 'bg-green-500' : quality >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`;
+    qualityText.textContent = quality >= 70 ? 'Excellent BRRRR deal — low money left, strong cash flow' :
+        quality >= 40 ? 'Decent deal — some money left in or moderate cash flow' : 'Weak deal — too much money left in or negative cash flow';
+    qualityText.className = `text-sm mt-2 ${quality >= 70 ? 'text-green-700' : quality >= 40 ? 'text-yellow-700' : 'text-red-700'}`;
+
+    // Cash flow chart
+    const items = [
+        { label: 'Effective Rent', value: effectiveRent, color: '#16a34a' },
+        { label: 'Mortgage (P&I)', value: -mortgagePayment, color: '#ef4444' },
+        { label: 'Property Mgmt', value: -mgmt, color: '#f97316' },
+        { label: 'Taxes', value: -monthlyTaxes, color: '#eab308' },
+        { label: 'Insurance', value: -monthlyInsurance, color: '#8b5cf6' },
+        { label: 'Maintenance', value: -monthlyMaint, color: '#6366f1' },
+    ];
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('cashflowChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: items.map(i => i.label),
+            datasets: [{
+                data: items.map(i => Math.round(Math.abs(i.value))),
+                backgroundColor: items.map(i => i.color),
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) + '/mo' } } },
+            scales: { y: { ticks: { callback: v => fmt(v) } } }
+        }
+    });
+
+    // Cash flow table
+    document.getElementById('cashflowTable').innerHTML = items.map(i =>
+        `<div class="flex justify-between text-sm"><span>${i.label}</span><span class="${i.value >= 0 ? 'text-green-600' : 'text-red-600'} font-medium">${fmt(Math.abs(i.value))}/mo</span></div>`
+    ).join('') + `<div class="flex justify-between text-sm font-bold border-t pt-2 mt-2"><span>Net Cash Flow</span><span class="${monthlyCashFlow >= 0 ? 'text-green-700' : 'text-red-700'}">${fmt(monthlyCashFlow)}/mo (${fmt(annualCashFlow)}/yr)</span></div>`;
+
+    // Steps table
+    document.getElementById('stepsTable').innerHTML = `
+        <tr class="border-b"><td class="py-2 font-bold text-brand-500">1. Buy</td><td class="text-right">${fmt(purchase)} + ${fmt(closingBuy)} closing = ${fmt(purchase + closingBuy)}</td></tr>
+        <tr class="border-b"><td class="py-2 font-bold text-brand-500">2. Rehab</td><td class="text-right">${fmt(rehab)} renovation → ARV ${fmt(arv)}</td></tr>
+        <tr class="border-b"><td class="py-2 font-bold text-brand-500">3. Rent</td><td class="text-right">${fmt(rent)}/mo gross, ${fmt(effectiveRent)}/mo effective</td></tr>
+        <tr class="border-b"><td class="py-2 font-bold text-brand-500">4. Refinance</td><td class="text-right">${(ltvRefi*100)}% of ${fmt(arv)} = ${fmt(refiLoan)} loan, get back ${fmt(cashBack)}</td></tr>
+        <tr><td class="py-2 font-bold text-green-600">5. Repeat</td><td class="text-right font-bold">${moneyLeft <= 0 ? 'All cash recovered! Ready to repeat.' : fmt(moneyLeft) + ' still in deal'}</td></tr>
+    `;
+}
+
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+calculate();
+</script>
+{% endblock %}

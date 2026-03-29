@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Self-Employment Tax Calculator by State{% endblock %}
+{% block description %}Calculate your total self-employment tax including federal SE tax, federal income tax, and state income tax. Compare tax burden across all 50 states.{% endblock %}
+{% block keywords %}self employment tax calculator, freelancer tax calculator, self employed tax by state, 1099 tax calculator, gig worker tax calculator{% endblock %}
+{% block canonical %}/niche_calc/se-tax{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Self-Employment Tax by State</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Self-Employment Tax Calculator</h1>
+                <p class="text-gray-600 mt-2">See your full tax picture: SE tax + federal + state.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="input-group">
+                    <label for="netIncome">Net Self-Employment Income ($)</label>
+                    <input type="number" id="netIncome" value="100000" min="0" step="5000">
+                    <p class="text-xs text-gray-500 mt-1">Revenue minus business expenses</p>
+                </div>
+                <div class="input-group">
+                    <label for="filing3">Filing Status</label>
+                    <select id="filing3">
+                        <option value="single">Single</option>
+                        <option value="married">Married Filing Jointly</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="otherW2">Other W-2 Income ($)</label>
+                    <input type="number" id="otherW2" value="0" min="0" step="5000">
+                    <p class="text-xs text-gray-500 mt-1">From a day job, if any</p>
+                </div>
+                <div class="input-group">
+                    <label for="state3">Your State</label>
+                    <select id="state3"></select>
+                </div>
+                <div class="input-group">
+                    <label for="qbi">Claim QBI Deduction?</label>
+                    <select id="qbi">
+                        <option value="yes" selected>Yes (20% of qualified income)</option>
+                        <option value="no">No</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Section 199A: Most sole proprietors qualify</p>
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Calculate Tax
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Total Tax</p>
+                    <p class="text-3xl font-bold mt-1" id="totalTax3">$0</p>
+                    <p class="text-sm opacity-80 mt-1" id="effectiveRate3">0% effective rate</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Take-Home Pay</p>
+                    <p class="text-3xl font-bold text-green-600" id="takeHome">$0</p>
+                    <p class="text-sm text-gray-500 mt-1" id="takeHomeMo">$0/month</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">SE Tax (15.3%)</p>
+                    <p class="text-lg font-bold text-orange-600" id="seTax">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Federal Income Tax</p>
+                    <p class="text-lg font-bold text-blue-600" id="fedIncome">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">State Income Tax</p>
+                    <p class="text-lg font-bold text-purple-600" id="stateTax3">$0</p>
+                </div>
+            </div>
+
+            <!-- Quarterly estimates -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-5">
+                <h3 class="font-bold text-yellow-900 mb-2">Quarterly Estimated Tax Payments</h3>
+                <div class="grid grid-cols-4 gap-3 text-center">
+                    <div>
+                        <p class="text-xs text-yellow-700">Q1 (Apr 15)</p>
+                        <p class="font-bold text-yellow-900" id="q1">$0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-yellow-700">Q2 (Jun 15)</p>
+                        <p class="font-bold text-yellow-900" id="q2">$0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-yellow-700">Q3 (Sep 15)</p>
+                        <p class="font-bold text-yellow-900" id="q3">$0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-yellow-700">Q4 (Jan 15)</p>
+                        <p class="font-bold text-yellow-900" id="q4">$0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Tax Breakdown</h3>
+                <canvas id="seTaxChart" height="200"></canvas>
+            </div>
+
+            <!-- State comparison -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-2">All States Comparison</h3>
+                <p class="text-sm text-gray-500 mb-4">Total tax on <span id="incLabel">$100,000</span> SE income</p>
+                <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 bg-white">
+                            <tr class="border-b-2">
+                                <th class="text-left py-2 px-2">State</th>
+                                <th class="text-right py-2 px-2">State Tax</th>
+                                <th class="text-right py-2 px-2">Total Tax</th>
+                                <th class="text-right py-2 px-2">Take-Home</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stateTable3"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>How Self-Employment Tax Works</h2>
+        <p>When you're self-employed, you pay both the employer and employee portions of Social Security and Medicare taxes — a combined 15.3% on 92.35% of your net earnings.</p>
+
+        <h3>SE Tax Breakdown</h3>
+        <ul>
+            <li><strong>Social Security:</strong> 12.4% on net earnings up to $176,100 (2026)</li>
+            <li><strong>Medicare:</strong> 2.9% on all net earnings (no cap)</li>
+            <li><strong>Additional Medicare:</strong> 0.9% on earnings above $200,000 (single) / $250,000 (married)</li>
+            <li><strong>Tax base:</strong> 92.35% of net self-employment income (you get a 7.65% reduction)</li>
+        </ul>
+
+        <h3>Key Deductions for Self-Employed</h3>
+        <ul>
+            <li><strong>Half of SE tax:</strong> Deductible from gross income (reduces income tax, not SE tax)</li>
+            <li><strong>QBI Deduction:</strong> 20% of qualified business income (Section 199A) — most sole proprietors qualify</li>
+            <li><strong>Health insurance:</strong> 100% deductible if self-employed (not calculated here)</li>
+        </ul>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Self-Employment Tax Calculator by State",
+    "url": "https://www.rsfundmanagement.com/niche_calc/se-tax",
+    "description": "Calculate self-employment tax including federal SE tax, income tax, and state tax. Compare across all 50 states.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const STATE_RATES = {
+    'Alabama': 5.0, 'Alaska': 0, 'Arizona': 2.5, 'Arkansas': 4.4, 'California': 13.3,
+    'Colorado': 4.4, 'Connecticut': 6.99, 'Delaware': 6.6, 'Florida': 0,
+    'Georgia': 5.49, 'Hawaii': 11.0, 'Idaho': 5.8, 'Illinois': 4.95,
+    'Indiana': 3.05, 'Iowa': 5.7, 'Kansas': 5.7, 'Kentucky': 4.0,
+    'Louisiana': 4.25, 'Maine': 7.15, 'Maryland': 5.75, 'Massachusetts': 9.0,
+    'Michigan': 4.25, 'Minnesota': 9.85, 'Mississippi': 5.0, 'Missouri': 4.8,
+    'Montana': 6.75, 'Nebraska': 6.64, 'Nevada': 0, 'New Hampshire': 0,
+    'New Jersey': 10.75, 'New Mexico': 5.9, 'New York': 10.9, 'North Carolina': 4.5,
+    'North Dakota': 2.5, 'Ohio': 3.5, 'Oklahoma': 4.75, 'Oregon': 9.9,
+    'Pennsylvania': 3.07, 'Rhode Island': 5.99, 'South Carolina': 6.4,
+    'South Dakota': 0, 'Tennessee': 0, 'Texas': 0, 'Utah': 4.65,
+    'Vermont': 8.75, 'Virginia': 5.75, 'Washington': 7.0, 'West Virginia': 5.12,
+    'Wisconsin': 7.65, 'Wyoming': 0, 'District of Columbia': 10.75
+};
+
+const FED_BRACKETS_SINGLE = [
+    { limit: 11925, rate: 10 }, { limit: 48475, rate: 12 }, { limit: 103350, rate: 22 },
+    { limit: 197300, rate: 24 }, { limit: 250525, rate: 32 }, { limit: 626350, rate: 35 },
+    { limit: Infinity, rate: 37 }
+];
+const FED_BRACKETS_MARRIED = [
+    { limit: 23850, rate: 10 }, { limit: 96950, rate: 12 }, { limit: 206700, rate: 22 },
+    { limit: 394600, rate: 24 }, { limit: 501050, rate: 32 }, { limit: 751600, rate: 35 },
+    { limit: Infinity, rate: 37 }
+];
+const STD_DED = { single: 15700, married: 31400 };
+const SS_LIMIT = 176100;
+const ADD_MEDICARE_THRESHOLD = { single: 200000, married: 250000 };
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+// Populate state dropdown
+const sel3 = document.getElementById('state3');
+Object.keys(STATE_RATES).sort().forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = `${s} (${STATE_RATES[s]}%)`;
+    sel3.appendChild(opt);
+});
+sel3.value = 'New York';
+
+function calcFedIncomeTax(taxableIncome, filing) {
+    const brackets = filing === 'married' ? FED_BRACKETS_MARRIED : FED_BRACKETS_SINGLE;
+    let tax = 0, prev = 0;
+    for (const b of brackets) {
+        const taxable = Math.min(Math.max(taxableIncome - prev, 0), b.limit - prev);
+        tax += taxable * b.rate / 100;
+        prev = b.limit;
+        if (taxableIncome <= b.limit) break;
+    }
+    return tax;
+}
+
+function calcSETax(seIncome, w2Income) {
+    const taxBase = seIncome * 0.9235;
+    const ssWagesUsed = Math.min(w2Income, SS_LIMIT);
+    const ssRoom = Math.max(0, SS_LIMIT - ssWagesUsed);
+    const ssTax = Math.min(taxBase, ssRoom) * 0.124;
+    const medicareTax = taxBase * 0.029;
+    return { seTax: ssTax + medicareTax, deductibleHalf: (ssTax + medicareTax) / 2, taxBase };
+}
+
+function calcAllTaxes(seIncome, w2Income, filing, stateRate, useQBI) {
+    const se = calcSETax(seIncome, w2Income);
+
+    // Additional Medicare
+    const threshold = ADD_MEDICARE_THRESHOLD[filing];
+    const totalEarnings = seIncome * 0.9235 + w2Income;
+    const addMedicare = Math.max(0, totalEarnings - threshold) * 0.009;
+
+    // Federal income tax
+    const agi = seIncome + w2Income - se.deductibleHalf;
+    const stdDed = STD_DED[filing];
+    let qbiDeduction = 0;
+    if (useQBI) qbiDeduction = Math.min(seIncome * 0.2, (agi - stdDed) * 0.2);
+    const taxableIncome = Math.max(0, agi - stdDed - qbiDeduction);
+    const fedIncome = calcFedIncomeTax(taxableIncome, filing);
+
+    // State tax (simplified: flat top rate on SE income)
+    const stateTax = seIncome * stateRate / 100;
+
+    const totalTax = se.seTax + addMedicare + fedIncome + stateTax;
+
+    return { seTax: se.seTax + addMedicare, fedIncome, stateTax, totalTax };
+}
+
+let chart = null;
+
+function calculate() {
+    const seIncome = parseFloat(document.getElementById('netIncome').value) || 0;
+    const filing = document.getElementById('filing3').value;
+    const w2 = parseFloat(document.getElementById('otherW2').value) || 0;
+    const state = document.getElementById('state3').value;
+    const useQBI = document.getElementById('qbi').value === 'yes';
+    const stateRate = STATE_RATES[state] || 0;
+
+    const taxes = calcAllTaxes(seIncome, w2, filing, stateRate, useQBI);
+    const takeHome = seIncome - taxes.totalTax;
+    const effective = seIncome > 0 ? (taxes.totalTax / seIncome * 100).toFixed(1) : 0;
+
+    document.getElementById('totalTax3').textContent = fmt(taxes.totalTax);
+    document.getElementById('effectiveRate3').textContent = effective + '% effective rate';
+    document.getElementById('takeHome').textContent = fmt(takeHome);
+    document.getElementById('takeHomeMo').textContent = fmt(takeHome / 12) + '/month';
+    document.getElementById('seTax').textContent = fmt(taxes.seTax);
+    document.getElementById('fedIncome').textContent = fmt(taxes.fedIncome);
+    document.getElementById('stateTax3').textContent = fmt(taxes.stateTax);
+    document.getElementById('incLabel').textContent = fmt(seIncome);
+
+    // Quarterly
+    const quarterly = Math.ceil(taxes.totalTax / 4);
+    ['q1', 'q2', 'q3', 'q4'].forEach(id => document.getElementById(id).textContent = fmt(quarterly));
+
+    // Chart
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('seTaxChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Take-Home', 'SE Tax', 'Federal Income Tax', 'State Tax'],
+            datasets: [{
+                data: [Math.round(takeHome), Math.round(taxes.seTax), Math.round(taxes.fedIncome), Math.round(taxes.stateTax)],
+                backgroundColor: ['#16a34a', '#f97316', '#3b82f6', '#8b5cf6'],
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.raw)} (${(ctx.raw / seIncome * 100).toFixed(1)}%)` } }
+            }
+        }
+    });
+
+    // State comparison
+    const rows = Object.entries(STATE_RATES)
+        .map(([s, r]) => {
+            const t = calcAllTaxes(seIncome, w2, filing, r, useQBI);
+            return { state: s, stateTax: t.stateTax, total: t.totalTax, takeHome: seIncome - t.totalTax };
+        })
+        .sort((a, b) => a.total - b.total);
+
+    document.getElementById('stateTable3').innerHTML = rows.map(r => {
+        const hl = r.state === state ? 'bg-blue-50 font-bold' : '';
+        const noTax = STATE_RATES[r.state] === 0 ? '<span class="text-green-600 text-xs ml-1">NO TAX</span>' : '';
+        return `<tr class="border-b border-gray-100 ${hl}">
+            <td class="py-1.5 px-2">${r.state}${noTax}</td>
+            <td class="text-right py-1.5 px-2">${fmt(r.stateTax)}</td>
+            <td class="text-right py-1.5 px-2">${fmt(r.total)}</td>
+            <td class="text-right py-1.5 px-2 text-green-700">${fmt(r.takeHome)}</td>
+        </tr>`;
+    }).join('');
+}
+
+document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('change', calculate);
+    el.addEventListener('input', calculate);
+});
+calculate();
+</script>
+{% endblock %}

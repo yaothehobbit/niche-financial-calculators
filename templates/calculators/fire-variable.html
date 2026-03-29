@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}FIRE Number Calculator (Variable Spending){% endblock %}
+{% block description %}Calculate your FIRE number with different spending phases. Plan for higher early retirement spending and lower later-life costs.{% endblock %}
+{% block keywords %}fire calculator, fire number calculator, financial independence calculator, early retirement calculator, variable spending retirement{% endblock %}
+{% block canonical %}/niche_calc/fire-variable{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">FIRE Number (Variable Spending)</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">FIRE Number Calculator</h1>
+                <p class="text-gray-600 mt-2">Plan for different spending in each phase of retirement.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="input-group">
+                    <label for="curAge3">Current Age</label>
+                    <input type="number" id="curAge3" value="35" min="18" max="80">
+                </div>
+                <div class="input-group">
+                    <label for="fireAge">Target FIRE Age</label>
+                    <input type="number" id="fireAge" value="45" min="25" max="80">
+                </div>
+                <div class="input-group">
+                    <label for="curSavings3">Current Savings ($)</label>
+                    <input type="number" id="curSavings3" value="200000" min="0" step="10000">
+                </div>
+                <div class="input-group">
+                    <label for="moSave">Monthly Savings ($)</label>
+                    <input type="number" id="moSave" value="3000" min="0" step="250">
+                </div>
+                <div class="input-group">
+                    <label for="returnRate3">Real Return (%)</label>
+                    <input type="number" id="returnRate3" value="7" min="1" max="15" step="0.5">
+                </div>
+                <div class="input-group">
+                    <label for="swr3">Safe Withdrawal Rate (%)</label>
+                    <input type="number" id="swr3" value="4" min="2" max="6" step="0.25">
+                </div>
+
+                <hr class="my-4">
+                <h3 class="font-bold text-gray-900">Spending Phases (in today's dollars)</h3>
+
+                <div class="bg-blue-50 rounded-lg p-3 space-y-3">
+                    <p class="text-xs font-bold text-blue-800">Phase 1: Go-Go Years (active early retirement)</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group">
+                            <label for="p1Start">Ages</label>
+                            <input type="number" id="p1Start" value="45" min="25" max="90">
+                        </div>
+                        <div class="input-group">
+                            <label for="p1End">to</label>
+                            <input type="number" id="p1End" value="60" min="25" max="95">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="p1Spend">Annual Spending ($)</label>
+                        <input type="number" id="p1Spend" value="60000" min="0" step="1000">
+                    </div>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-3 space-y-3">
+                    <p class="text-xs font-bold text-green-800">Phase 2: Slow-Go Years (moderate activity)</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group">
+                            <label for="p2Start">Ages</label>
+                            <input type="number" id="p2Start" value="60" min="25" max="90">
+                        </div>
+                        <div class="input-group">
+                            <label for="p2End">to</label>
+                            <input type="number" id="p2End" value="75" min="25" max="95">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="p2Spend">Annual Spending ($)</label>
+                        <input type="number" id="p2Spend" value="45000" min="0" step="1000">
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 rounded-lg p-3 space-y-3">
+                    <p class="text-xs font-bold text-purple-800">Phase 3: No-Go Years (lower activity + healthcare)</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group">
+                            <label for="p3Start">Ages</label>
+                            <input type="number" id="p3Start" value="75" min="25" max="90">
+                        </div>
+                        <div class="input-group">
+                            <label for="p3End">to</label>
+                            <input type="number" id="p3End" value="95" min="60" max="105">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="p3Spend">Annual Spending ($)</label>
+                        <input type="number" id="p3Spend" value="40000" min="0" step="1000">
+                    </div>
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Calculate FIRE Number
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Your FIRE Number</p>
+                    <p class="text-3xl font-bold mt-1" id="fireNum">$0</p>
+                    <p class="text-sm opacity-80 mt-1">portfolio needed at FIRE age</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Simple FIRE Number (for comparison)</p>
+                    <p class="text-2xl font-bold text-gray-400 mt-1" id="simpleFire">$0</p>
+                    <p class="text-sm text-gray-500 mt-1">25x highest annual spending</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Projected at FIRE Age</p>
+                    <p class="text-lg font-bold" id="projected">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Surplus / Shortfall</p>
+                    <p class="text-lg font-bold" id="surplus">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <p class="text-xs text-gray-500">Years to FIRE</p>
+                    <p class="text-lg font-bold text-brand-500" id="yrsToFire">--</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Portfolio Through Retirement</h3>
+                <canvas id="fireChart" height="280"></canvas>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Spending Phase Summary</h3>
+                <div id="phaseSummary" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>Why Variable Spending Matters</h2>
+        <p>Most FIRE calculators assume flat spending throughout retirement. In reality, spending follows a "smile curve": higher in early retirement (travel, hobbies), lower in middle years, then potentially higher again due to healthcare costs.</p>
+
+        <h3>The Three Retirement Phases</h3>
+        <ul>
+            <li><strong>Go-Go Years (early):</strong> Active lifestyle, travel, dining — typically the highest spending phase</li>
+            <li><strong>Slow-Go Years (middle):</strong> Less travel, more routine — spending naturally decreases 20-30%</li>
+            <li><strong>No-Go Years (late):</strong> Less activity but potentially higher healthcare costs — spending varies widely</li>
+        </ul>
+
+        <h3>How This Calculator Differs</h3>
+        <p>Instead of using a single "annual spending" number multiplied by 25, this calculator models the actual cash flows needed in each phase of retirement, discounting them back to your FIRE date to find the true portfolio size required. This often results in a lower FIRE number than the simple 25x rule.</p>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "FIRE Number Calculator (Variable Spending)",
+    "url": "https://www.rsfundmanagement.com/niche_calc/fire-variable",
+    "description": "Calculate your FIRE number with different spending phases for Go-Go, Slow-Go, and No-Go retirement years.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let chart = null;
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function calculate() {
+    const curAge = parseInt(document.getElementById('curAge3').value);
+    const fireAge = parseInt(document.getElementById('fireAge').value);
+    const curSav = parseFloat(document.getElementById('curSavings3').value) || 0;
+    const moSave = parseFloat(document.getElementById('moSave').value) || 0;
+    const realRet = parseFloat(document.getElementById('returnRate3').value) / 100;
+    const swr = parseFloat(document.getElementById('swr3').value) / 100;
+
+    const phases = [
+        { start: parseInt(document.getElementById('p1Start').value), end: parseInt(document.getElementById('p1End').value), spend: parseFloat(document.getElementById('p1Spend').value) || 0, label: 'Go-Go', color: '#3b82f6' },
+        { start: parseInt(document.getElementById('p2Start').value), end: parseInt(document.getElementById('p2End').value), spend: parseFloat(document.getElementById('p2Spend').value) || 0, label: 'Slow-Go', color: '#22c55e' },
+        { start: parseInt(document.getElementById('p3Start').value), end: parseInt(document.getElementById('p3End').value), spend: parseFloat(document.getElementById('p3Spend').value) || 0, label: 'No-Go', color: '#a855f7' },
+    ];
+
+    const endAge = phases[2].end;
+    const yrsToFire = fireAge - curAge;
+
+    // Calculate FIRE number: PV of all spending phases discounted to FIRE age
+    let fireNumber = 0;
+    for (const p of phases) {
+        for (let age = p.start; age < p.end; age++) {
+            const yearsFromFire = age - fireAge;
+            if (yearsFromFire >= 0) {
+                fireNumber += p.spend / Math.pow(1 + realRet, yearsFromFire);
+            }
+        }
+    }
+
+    // Simple FIRE number for comparison
+    const maxSpend = Math.max(...phases.map(p => p.spend));
+    const simpleFire = maxSpend / swr;
+
+    // Project savings to FIRE age
+    let projected = curSav;
+    for (let y = 0; y < yrsToFire; y++) {
+        projected = (projected + moSave * 12) * (1 + realRet);
+    }
+
+    const surplus = projected - fireNumber;
+
+    // Simulate portfolio through retirement
+    const labels = [];
+    const balData = [];
+    const spendData = [];
+    let bal = fireNumber; // Start with exact FIRE number for the chart
+
+    for (let age = fireAge; age <= endAge; age++) {
+        labels.push(age.toString());
+        balData.push(Math.max(0, Math.round(bal)));
+
+        let yearSpend = 0;
+        for (const p of phases) {
+            if (age >= p.start && age < p.end) { yearSpend = p.spend; break; }
+        }
+        spendData.push(yearSpend);
+        bal = (bal - yearSpend) * (1 + realRet);
+    }
+
+    // Update results
+    document.getElementById('fireNum').textContent = fmt(fireNumber);
+    document.getElementById('simpleFire').textContent = fmt(simpleFire);
+    document.getElementById('projected').textContent = fmt(projected);
+    document.getElementById('surplus').textContent = fmt(surplus);
+    document.getElementById('surplus').className = `text-lg font-bold ${surplus >= 0 ? 'text-green-600' : 'text-red-600'}`;
+    document.getElementById('yrsToFire').textContent = yrsToFire > 0 ? yrsToFire + ' years' : 'Now!';
+
+    // Phase summary
+    document.getElementById('phaseSummary').innerHTML = phases.map(p =>
+        `<div class="flex justify-between items-center bg-gray-50 rounded-lg p-3">
+            <div><span class="font-bold">${p.label}</span> <span class="text-sm text-gray-500">(ages ${p.start}-${p.end})</span></div>
+            <div class="text-right"><span class="font-bold">${fmt(p.spend)}/yr</span> <span class="text-xs text-gray-500">${fmt(p.spend * (p.end - p.start))} total</span></div>
+        </div>`
+    ).join('') + `<div class="flex justify-between items-center bg-brand-50 rounded-lg p-3 font-bold">
+        <span>Total Lifetime Spending</span>
+        <span>${fmt(phases.reduce((s, p) => s + p.spend * (p.end - p.start), 0))}</span>
+    </div>`;
+
+    // Chart
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('fireChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Portfolio Balance',
+                    data: balData,
+                    borderColor: '#1e40af',
+                    backgroundColor: 'rgba(30,64,175,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'Annual Spending',
+                    data: spendData,
+                    borderColor: '#ef4444',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    yAxisID: 'y1',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: 'Age' } },
+                y: { position: 'left', title: { display: true, text: 'Portfolio' }, ticks: { callback: v => fmt(v) } },
+                y1: { position: 'right', title: { display: true, text: 'Spending' }, ticks: { callback: v => fmt(v) }, grid: { drawOnChartArea: false } }
+            },
+            plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } } }
+        }
+    });
+}
+
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+calculate();
+</script>
+{% endblock %}
