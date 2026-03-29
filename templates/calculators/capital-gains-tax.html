@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Capital Gains Tax Calculator by State{% endblock %}
+{% block description %}Compare federal and state capital gains tax rates across all 50 states. Calculate your total tax on short-term and long-term capital gains for 2026.{% endblock %}
+{% block keywords %}capital gains tax calculator by state, state capital gains tax rates 2026, capital gains tax comparison, long term capital gains tax rates{% endblock %}
+{% block canonical %}/niche_calc/capital-gains-tax{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Capital Gains Tax by State</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <!-- Inputs -->
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Capital Gains Tax by State</h1>
+                <p class="text-gray-600 mt-2">See your total tax bill including federal + state rates.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="input-group">
+                    <label for="gainAmount">Capital Gain Amount ($)</label>
+                    <input type="number" id="gainAmount" value="100000" min="0" step="5000">
+                </div>
+                <div class="input-group">
+                    <label for="holdingPeriod">Holding Period</label>
+                    <select id="holdingPeriod">
+                        <option value="long">Long-term (held > 1 year)</option>
+                        <option value="short">Short-term (held < 1 year)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="filingStatus">Filing Status</label>
+                    <select id="filingStatus">
+                        <option value="single">Single</option>
+                        <option value="married">Married Filing Jointly</option>
+                        <option value="hoh">Head of Household</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="otherIncome">Other Taxable Income ($)</label>
+                    <input type="number" id="otherIncome" value="75000" min="0" step="5000">
+                    <p class="text-xs text-gray-500 mt-1">Determines your tax bracket</p>
+                </div>
+                <div class="input-group">
+                    <label for="stateSelect">Your State</label>
+                    <select id="stateSelect"></select>
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Calculate Tax
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Total Tax</p>
+                    <p class="text-2xl font-bold mt-1" id="totalTax">$0</p>
+                    <p class="text-sm opacity-80 mt-1" id="effectiveRate">0% effective</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Federal Tax</p>
+                    <p class="text-xl font-bold text-blue-600" id="fedTax">$0</p>
+                    <p class="text-sm text-gray-500 mt-1" id="fedRate">0% rate</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">State Tax</p>
+                    <p class="text-xl font-bold text-purple-600" id="stateTax">$0</p>
+                    <p class="text-sm text-gray-500 mt-1" id="stateRate">0% rate</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-5">
+                <p class="text-sm text-gray-500">You Keep After Tax</p>
+                <p class="text-3xl font-bold text-green-600" id="afterTax">$0</p>
+            </div>
+
+            <!-- NIIT notice -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4" id="niitNotice" style="display:none">
+                <p class="text-sm text-yellow-800"><strong>Net Investment Income Tax (NIIT):</strong> <span id="niitText"></span></p>
+            </div>
+
+            <!-- All States Comparison -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-2">All 50 States Comparison</h3>
+                <p class="text-sm text-gray-500 mb-4">Total tax (federal + state) on your <span id="gainLabel">$100,000</span> gain</p>
+                <div class="overflow-x-auto" style="max-height: 500px; overflow-y: auto;">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 bg-white">
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-2 px-2">State</th>
+                                <th class="text-right py-2 px-2">State Rate</th>
+                                <th class="text-right py-2 px-2">Total Tax</th>
+                                <th class="text-right py-2 px-2">You Keep</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stateTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO Content -->
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>Understanding Capital Gains Tax by State (2026)</h2>
+        <p>Capital gains taxes vary dramatically by state. Nine states have no income tax at all, while California taxes capital gains at up to 13.3%. Understanding these differences can save you thousands when selling investments, property, or a business.</p>
+
+        <h3>Federal Capital Gains Tax Rates (2026)</h3>
+        <ul>
+            <li><strong>Long-term (held > 1 year):</strong> 0%, 15%, or 20% depending on income</li>
+            <li><strong>Short-term (held < 1 year):</strong> Taxed as ordinary income (10%-37%)</li>
+            <li><strong>NIIT surcharge:</strong> Additional 3.8% on investment income for high earners (AGI > $200K single / $250K married)</li>
+        </ul>
+
+        <h3>States with No Capital Gains Tax</h3>
+        <p>Alaska, Florida, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Washington, and Wyoming have no state income tax on capital gains.</p>
+
+        <h3>Highest Capital Gains Tax States</h3>
+        <p>California (13.3%), Hawaii (11%), New Jersey (10.75%), Oregon (9.9%), and Minnesota (9.85%) have the highest top marginal rates on capital gains.</p>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Capital Gains Tax Calculator by State",
+    "url": "https://www.rsfundmanagement.com/niche_calc/capital-gains-tax",
+    "description": "Compare capital gains tax rates across all 50 US states. Calculate your total federal + state tax on investment gains.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// State tax rates (top marginal rate for capital gains, 2026 estimates)
+const STATE_RATES = {
+    'Alabama': 5.0, 'Alaska': 0, 'Arizona': 2.5, 'Arkansas': 4.4, 'California': 13.3,
+    'Colorado': 4.4, 'Connecticut': 6.99, 'Delaware': 6.6, 'Florida': 0,
+    'Georgia': 5.49, 'Hawaii': 11.0, 'Idaho': 5.8, 'Illinois': 4.95,
+    'Indiana': 3.05, 'Iowa': 5.7, 'Kansas': 5.7, 'Kentucky': 4.0,
+    'Louisiana': 4.25, 'Maine': 7.15, 'Maryland': 5.75, 'Massachusetts': 9.0,
+    'Michigan': 4.25, 'Minnesota': 9.85, 'Mississippi': 5.0, 'Missouri': 4.8,
+    'Montana': 6.75, 'Nebraska': 6.64, 'Nevada': 0, 'New Hampshire': 0,
+    'New Jersey': 10.75, 'New Mexico': 5.9, 'New York': 10.9, 'North Carolina': 4.5,
+    'North Dakota': 2.5, 'Ohio': 3.5, 'Oklahoma': 4.75, 'Oregon': 9.9,
+    'Pennsylvania': 3.07, 'Rhode Island': 5.99, 'South Carolina': 6.4,
+    'South Dakota': 0, 'Tennessee': 0, 'Texas': 0, 'Utah': 4.65,
+    'Vermont': 8.75, 'Virginia': 5.75, 'Washington': 7.0, 'West Virginia': 5.12,
+    'Wisconsin': 7.65, 'Wyoming': 0, 'District of Columbia': 10.75
+};
+
+// Federal long-term capital gains brackets 2026 (single)
+const FED_LTCG_SINGLE = [
+    { limit: 48350, rate: 0 },
+    { limit: 533400, rate: 15 },
+    { limit: Infinity, rate: 20 }
+];
+const FED_LTCG_MARRIED = [
+    { limit: 96700, rate: 0 },
+    { limit: 600050, rate: 15 },
+    { limit: Infinity, rate: 20 }
+];
+const FED_LTCG_HOH = [
+    { limit: 64750, rate: 0 },
+    { limit: 566700, rate: 15 },
+    { limit: Infinity, rate: 20 }
+];
+
+// Federal ordinary income brackets 2026 (single, simplified)
+const FED_ORDINARY_SINGLE = [
+    { limit: 11925, rate: 10 }, { limit: 48475, rate: 12 }, { limit: 103350, rate: 22 },
+    { limit: 197300, rate: 24 }, { limit: 250525, rate: 32 }, { limit: 626350, rate: 35 },
+    { limit: Infinity, rate: 37 }
+];
+const FED_ORDINARY_MARRIED = [
+    { limit: 23850, rate: 10 }, { limit: 96950, rate: 12 }, { limit: 206700, rate: 22 },
+    { limit: 394600, rate: 24 }, { limit: 501050, rate: 32 }, { limit: 751600, rate: 35 },
+    { limit: Infinity, rate: 37 }
+];
+
+const NIIT_THRESHOLD = { single: 200000, married: 250000, hoh: 200000 };
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+// Populate state dropdown
+const sel = document.getElementById('stateSelect');
+Object.keys(STATE_RATES).sort().forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = `${s} (${STATE_RATES[s]}%)`;
+    sel.appendChild(opt);
+});
+sel.value = 'New York';
+
+function getFedRate(gain, otherIncome, holding, filing) {
+    const totalIncome = otherIncome + gain;
+
+    if (holding === 'short') {
+        // Short-term = ordinary income rates, marginal on the gain portion
+        const brackets = filing === 'married' ? FED_ORDINARY_MARRIED : FED_ORDINARY_SINGLE;
+        let taxWithGain = 0, taxWithout = 0;
+        let remaining = totalIncome;
+        let remainingBase = otherIncome;
+        for (const b of brackets) {
+            const prev = brackets.indexOf(b) === 0 ? 0 : brackets[brackets.indexOf(b)-1].limit;
+            const width = b.limit - prev;
+            taxWithGain += Math.min(Math.max(remaining, 0), width) * b.rate / 100;
+            taxWithout += Math.min(Math.max(remainingBase, 0), width) * b.rate / 100;
+            remaining -= width;
+            remainingBase -= width;
+        }
+        const marginalTax = taxWithGain - taxWithout;
+        const effectiveRate = gain > 0 ? (marginalTax / gain * 100) : 0;
+        return { tax: marginalTax, rate: effectiveRate };
+    }
+
+    // Long-term capital gains
+    const brackets = filing === 'married' ? FED_LTCG_MARRIED : filing === 'hoh' ? FED_LTCG_HOH : FED_LTCG_SINGLE;
+    // LTCG stacks on top of ordinary income
+    let taxableAtLTCG = gain;
+    let startBracket = otherIncome;
+    let tax = 0;
+
+    for (const b of brackets) {
+        if (startBracket >= b.limit) continue;
+        const room = b.limit - startBracket;
+        const taxable = Math.min(taxableAtLTCG, room);
+        tax += taxable * b.rate / 100;
+        taxableAtLTCG -= taxable;
+        startBracket += taxable;
+        if (taxableAtLTCG <= 0) break;
+    }
+
+    const effectiveRate = gain > 0 ? (tax / gain * 100) : 0;
+    return { tax, rate: effectiveRate };
+}
+
+function calculate() {
+    const gain = parseFloat(document.getElementById('gainAmount').value) || 0;
+    const holding = document.getElementById('holdingPeriod').value;
+    const filing = document.getElementById('filingStatus').value;
+    const otherIncome = parseFloat(document.getElementById('otherIncome').value) || 0;
+    const state = document.getElementById('stateSelect').value;
+
+    const fed = getFedRate(gain, otherIncome, holding, filing);
+    const stateRatePct = STATE_RATES[state] || 0;
+    const stateTaxAmt = gain * stateRatePct / 100;
+
+    // NIIT
+    const agi = otherIncome + gain;
+    const niitThreshold = NIIT_THRESHOLD[filing] || 200000;
+    const niitSubject = Math.max(0, Math.min(gain, agi - niitThreshold));
+    const niitTax = niitSubject * 0.038;
+
+    const totalTax = fed.tax + stateTaxAmt + niitTax;
+    const effectiveRate = gain > 0 ? (totalTax / gain * 100).toFixed(1) : 0;
+
+    document.getElementById('totalTax').textContent = fmt(totalTax);
+    document.getElementById('effectiveRate').textContent = `${effectiveRate}% effective`;
+    document.getElementById('fedTax').textContent = fmt(fed.tax + niitTax);
+    document.getElementById('fedRate').textContent = `${fed.rate.toFixed(1)}% + ${niitTax > 0 ? '3.8% NIIT' : '0% NIIT'}`;
+    document.getElementById('stateTax').textContent = fmt(stateTaxAmt);
+    document.getElementById('stateRate').textContent = `${stateRatePct}% rate`;
+    document.getElementById('afterTax').textContent = fmt(gain - totalTax);
+    document.getElementById('gainLabel').textContent = fmt(gain);
+
+    // NIIT notice
+    const niitNotice = document.getElementById('niitNotice');
+    if (niitTax > 0) {
+        niitNotice.style.display = 'block';
+        document.getElementById('niitText').textContent =
+            `Your AGI of ${fmt(agi)} exceeds the ${fmt(niitThreshold)} threshold. NIIT adds ${fmt(niitTax)} (3.8% on ${fmt(niitSubject)}).`;
+    } else {
+        niitNotice.style.display = 'none';
+    }
+
+    // State comparison table
+    const rows = Object.entries(STATE_RATES)
+        .map(([s, r]) => {
+            const sTax = gain * r / 100;
+            const total = fed.tax + sTax + niitTax;
+            return { state: s, rate: r, total, keep: gain - total };
+        })
+        .sort((a, b) => a.total - b.total);
+
+    document.getElementById('stateTable').innerHTML = rows.map(r => {
+        const highlight = r.state === state ? 'bg-blue-50 font-bold' : '';
+        const noTax = r.rate === 0 ? '<span class="text-green-600 text-xs ml-1">NO TAX</span>' : '';
+        return `<tr class="border-b border-gray-100 ${highlight}">
+            <td class="py-1.5 px-2">${r.state}${noTax}</td>
+            <td class="text-right py-1.5 px-2">${r.rate}%</td>
+            <td class="text-right py-1.5 px-2">${fmt(r.total)}</td>
+            <td class="text-right py-1.5 px-2 text-green-700">${fmt(r.keep)}</td>
+        </tr>`;
+    }).join('');
+}
+
+document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calculate));
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+calculate();
+</script>
+{% endblock %}

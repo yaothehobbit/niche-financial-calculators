@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Investment Fee Impact Calculator{% endblock %}
+{% block description %}See how investment expense ratios compound over 30 years. Compare low-cost index funds vs high-fee active funds and see the true cost in dollars and years of work.{% endblock %}
+{% block keywords %}expense ratio calculator, investment fee impact, fund fee calculator, expense ratio comparison, cost of investment fees{% endblock %}
+{% block canonical %}/niche_calc/fee-impact{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Fee Impact Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <!-- Inputs (2 cols) -->
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Investment Fee Impact Calculator</h1>
+                <p class="text-gray-600 mt-2">See how expense ratios silently erode your wealth over time.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="input-group">
+                    <label for="initial">Initial Investment ($)</label>
+                    <input type="number" id="initial" value="50000" min="0" step="1000">
+                </div>
+                <div class="input-group">
+                    <label for="monthly">Monthly Contribution ($)</label>
+                    <input type="number" id="monthly" value="500" min="0" step="50">
+                </div>
+                <div class="input-group">
+                    <label for="years">Investment Period (years)</label>
+                    <input type="number" id="years" value="30" min="1" max="60">
+                </div>
+                <div class="input-group">
+                    <label for="returnRate">Expected Annual Return (%)</label>
+                    <input type="number" id="returnRate" value="8" min="0" max="20" step="0.5">
+                </div>
+
+                <hr class="my-4">
+                <h3 class="font-bold text-gray-900">Compare Two Funds</h3>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label for="feeA" class="text-green-700">Fund A Fee (%)</label>
+                        <input type="number" id="feeA" value="0.04" min="0" max="5" step="0.01" class="border-green-300">
+                        <p class="text-xs text-gray-500 mt-1">e.g. Vanguard VTI</p>
+                    </div>
+                    <div class="input-group">
+                        <label for="feeB" class="text-red-700">Fund B Fee (%)</label>
+                        <input type="number" id="feeB" value="1.00" min="0" max="5" step="0.01" class="border-red-300">
+                        <p class="text-xs text-gray-500 mt-1">e.g. Typical active fund</p>
+                    </div>
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Calculate Impact
+                </button>
+            </div>
+        </div>
+
+        <!-- Results (3 cols) -->
+        <div class="lg:col-span-3 space-y-6">
+            <!-- Key Results -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Fee Difference Over <span id="resultYears">30</span> Years</p>
+                    <p class="text-3xl font-bold mt-1" id="feeDiff">$0</p>
+                    <p class="text-sm opacity-80 mt-1">That's money you keep</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Cost in Years of Work</p>
+                    <p class="text-3xl font-bold text-red-600 mt-1" id="yearsOfWork">0</p>
+                    <p class="text-sm text-gray-500 mt-1">at median US salary</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Fund A Final Value</p>
+                    <p class="text-2xl font-bold text-green-600" id="valueA">$0</p>
+                    <p class="text-xs text-gray-400" id="feesPaidA">Fees paid: $0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Fund B Final Value</p>
+                    <p class="text-2xl font-bold text-red-600" id="valueB">$0</p>
+                    <p class="text-xs text-gray-400" id="feesPaidB">Fees paid: $0</p>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Growth Comparison</h3>
+                <canvas id="feeChart" height="250"></canvas>
+            </div>
+
+            <!-- Year-by-year table -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Year-by-Year Breakdown</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-2 px-2">Year</th>
+                                <th class="text-right py-2 px-2 text-green-700">Fund A Value</th>
+                                <th class="text-right py-2 px-2 text-red-700">Fund B Value</th>
+                                <th class="text-right py-2 px-2">Difference</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO Content -->
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>How Investment Fees Compound Over Time</h2>
+        <p>A seemingly small difference in expense ratios can cost you hundreds of thousands of dollars over a 30-year investment horizon. This is because fees compound against you just as returns compound for you.</p>
+
+        <h3>Understanding Expense Ratios</h3>
+        <p>An expense ratio is the annual fee charged by a mutual fund or ETF, expressed as a percentage of assets under management. For example, a 1% expense ratio on a $100,000 portfolio costs $1,000 per year. But the real cost is much higher because that $1,000 can no longer compound for you.</p>
+
+        <h3>The 4% Rule Connection</h3>
+        <p>If you're planning for retirement using the 4% safe withdrawal rate, every dollar lost to fees reduces your sustainable annual income. A 1% fee effectively reduces your safe withdrawal rate to approximately 3%, cutting your retirement income by 25%.</p>
+
+        <h3>What's a Good Expense Ratio?</h3>
+        <ul>
+            <li><strong>Excellent:</strong> Under 0.10% (e.g., Vanguard VTI at 0.03%, Fidelity FZROX at 0.00%)</li>
+            <li><strong>Good:</strong> 0.10% - 0.50%</li>
+            <li><strong>Expensive:</strong> 0.50% - 1.00%</li>
+            <li><strong>Very Expensive:</strong> Over 1.00%</li>
+        </ul>
+    </div>
+</section>
+
+<!-- Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Investment Fee Impact Calculator",
+    "url": "https://www.rsfundmanagement.com/niche_calc/fee-impact",
+    "description": "Calculate how investment expense ratios compound over 30 years. Compare low-cost index funds vs high-fee active funds.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const MEDIAN_SALARY = 59384; // 2024 US median household income
+let chart = null;
+
+function fmt(n) {
+    return '$' + Math.round(n).toLocaleString('en-US');
+}
+
+function calculate() {
+    const initial = parseFloat(document.getElementById('initial').value) || 0;
+    const monthly = parseFloat(document.getElementById('monthly').value) || 0;
+    const years = parseInt(document.getElementById('years').value) || 30;
+    const returnRate = parseFloat(document.getElementById('returnRate').value) / 100;
+    const feeA = parseFloat(document.getElementById('feeA').value) / 100;
+    const feeB = parseFloat(document.getElementById('feeB').value) / 100;
+
+    const netReturnA = returnRate - feeA;
+    const netReturnB = returnRate - feeB;
+
+    let balA = initial, balB = initial;
+    let feesA = 0, feesB = 0;
+    const dataA = [initial], dataB = [initial], labels = ['0'];
+    const rows = [];
+
+    for (let y = 1; y <= years; y++) {
+        // Monthly contributions with monthly compounding
+        for (let m = 0; m < 12; m++) {
+            const monthlyFeeA = feeA / 12;
+            const monthlyFeeB = feeB / 12;
+            const monthlyReturnA = returnRate / 12;
+            const monthlyReturnB = returnRate / 12;
+
+            const grossGrowthA = balA * monthlyReturnA;
+            const grossGrowthB = balB * monthlyReturnB;
+            const feeChargeA = balA * monthlyFeeA;
+            const feeChargeB = balB * monthlyFeeB;
+
+            feesA += feeChargeA;
+            feesB += feeChargeB;
+
+            balA = balA + grossGrowthA - feeChargeA + monthly;
+            balB = balB + grossGrowthB - feeChargeB + monthly;
+        }
+
+        dataA.push(Math.round(balA));
+        dataB.push(Math.round(balB));
+        labels.push(y.toString());
+
+        if (y % 5 === 0 || y === years) {
+            rows.push(`<tr class="border-b border-gray-100">
+                <td class="py-2 px-2">${y}</td>
+                <td class="text-right py-2 px-2 text-green-700 font-medium">${fmt(balA)}</td>
+                <td class="text-right py-2 px-2 text-red-700 font-medium">${fmt(balB)}</td>
+                <td class="text-right py-2 px-2 font-bold">${fmt(balA - balB)}</td>
+            </tr>`);
+        }
+    }
+
+    const diff = balA - balB;
+    const yearsWork = (diff / MEDIAN_SALARY).toFixed(1);
+
+    document.getElementById('resultYears').textContent = years;
+    document.getElementById('feeDiff').textContent = fmt(diff);
+    document.getElementById('yearsOfWork').textContent = yearsWork;
+    document.getElementById('valueA').textContent = fmt(balA);
+    document.getElementById('valueB').textContent = fmt(balB);
+    document.getElementById('feesPaidA').textContent = `Fees paid: ${fmt(feesA)}`;
+    document.getElementById('feesPaidB').textContent = `Fees paid: ${fmt(feesB)}`;
+    document.getElementById('tableBody').innerHTML = rows.join('');
+
+    // Chart
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('feeChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: `Fund A (${(feeA*100).toFixed(2)}% fee)`,
+                    data: dataA,
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(22,163,74,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                },
+                {
+                    label: `Fund B (${(feeB*100).toFixed(2)}% fee)`,
+                    data: dataB,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220,38,38,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}`
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Years' } },
+                y: {
+                    title: { display: true, text: 'Portfolio Value' },
+                    ticks: { callback: v => fmt(v) }
+                }
+            }
+        }
+    });
+}
+
+// Auto-calculate on input change
+document.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', calculate);
+});
+
+// Initial calculation
+calculate();
+</script>
+{% endblock %}

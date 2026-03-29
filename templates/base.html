@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Financial Calculators{% endblock %} | RS Fund Management</title>
+    <meta name="description" content="{% block description %}Free financial calculators for FIRE planning, tax optimization, and investment analysis.{% endblock %}">
+    <meta name="keywords" content="{% block keywords %}financial calculator, investment calculator, FIRE calculator, tax calculator{% endblock %}">
+    <link rel="canonical" href="https://www.rsfundmanagement.com{% block canonical %}/niche_calc{% endblock %}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}Financial Calculators{% endblock %} | RS Fund Management">
+    <meta property="og:description" content="{% block og_description %}Free financial calculators for smarter investing.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.rsfundmanagement.com{% block og_url %}/niche_calc{% endblock %}">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#1e40af',
+                            600: '#1e3a8a',
+                            700: '#1e2d6d',
+                            800: '#172554',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        .calc-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        .calc-card { transition: all 0.2s ease; }
+        .input-group label { font-weight: 600; font-size: 0.875rem; color: #374151; }
+        .input-group input, .input-group select { border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem 0.75rem; width: 100%; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: #1e40af; box-shadow: 0 0 0 3px rgba(30,64,175,0.1); }
+        .result-card { background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); }
+        @media print { nav, footer, .no-print { display: none; } }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-brand-900 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="/niche_calc" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-500 rounded-lg flex items-center justify-center font-bold text-lg">RS</div>
+                <div>
+                    <div class="font-bold text-lg leading-tight">RS Fund Management</div>
+                    <div class="text-xs text-blue-300">Financial Calculators</div>
+                </div>
+            </a>
+            <div class="hidden md:flex items-center gap-6 text-sm">
+                <a href="/niche_calc" class="hover:text-blue-300 transition">All Calculators</a>
+                <a href="https://www.rsfundmanagement.com" class="hover:text-blue-300 transition">Main Site</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brand-900 text-gray-400 mt-16">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-white font-bold mb-3">RS Fund Management</h3>
+                    <p class="text-sm">Free financial calculators to help you make smarter investment decisions.</p>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold mb-3">Calculators</h3>
+                    <ul class="text-sm space-y-1">
+                        {% for c in calculators %}
+                        <li><a href="/niche_calc/{{ c.id }}" class="hover:text-white transition">{{ c.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold mb-3">Disclaimer</h3>
+                    <p class="text-xs">These calculators are for educational purposes only and do not constitute financial advice. Consult a qualified financial advisor before making investment decisions.</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-4 text-xs text-center">
+                &copy; 2026 RS Fund Management. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

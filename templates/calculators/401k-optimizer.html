@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}401(k) Employer Match Optimizer{% endblock %}
+{% block description %}Maximize your 401(k) employer match. Calculate how much to contribute to get every dollar of free money from your employer's matching program.{% endblock %}
+{% block keywords %}401k match calculator, employer match optimizer, 401k contribution calculator, maximize 401k match, employer 401k match{% endblock %}
+{% block canonical %}/niche_calc/401k-optimizer{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">401(k) Match Optimizer</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">401(k) Match Optimizer</h1>
+                <p class="text-gray-600 mt-2">Don't leave free money on the table. Maximize your employer match.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="input-group">
+                    <label for="salary">Annual Salary ($)</label>
+                    <input type="number" id="salary" value="100000" min="0" step="5000">
+                </div>
+                <div class="input-group">
+                    <label for="payFreq">Pay Frequency</label>
+                    <select id="payFreq">
+                        <option value="26" selected>Bi-weekly (26 paychecks)</option>
+                        <option value="24">Semi-monthly (24 paychecks)</option>
+                        <option value="12">Monthly (12 paychecks)</option>
+                        <option value="52">Weekly (52 paychecks)</option>
+                    </select>
+                </div>
+
+                <hr class="my-4">
+                <h3 class="font-bold text-gray-900">Employer Match Formula</h3>
+
+                <div class="input-group">
+                    <label for="matchType">Match Type</label>
+                    <select id="matchType" onchange="toggleMatchInputs()">
+                        <option value="simple">Simple Match (X% of Y%)</option>
+                        <option value="tiered">Tiered Match</option>
+                    </select>
+                </div>
+
+                <div id="simpleMatch">
+                    <div class="input-group">
+                        <label for="matchPct">Employer Matches (%)</label>
+                        <input type="number" id="matchPct" value="100" min="0" max="200" step="25">
+                        <p class="text-xs text-gray-500 mt-1">100% = dollar-for-dollar, 50% = 50 cents per dollar</p>
+                    </div>
+                    <div class="input-group mt-3">
+                        <label for="matchUpTo">Of Your First (%)</label>
+                        <input type="number" id="matchUpTo" value="6" min="0" max="100" step="0.5">
+                        <p class="text-xs text-gray-500 mt-1">Common: 100% of first 6%, or 50% of first 6%</p>
+                    </div>
+                </div>
+
+                <div id="tieredMatch" style="display:none" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group">
+                            <label>Tier 1: Match %</label>
+                            <input type="number" id="tier1Match" value="100" min="0" max="200">
+                        </div>
+                        <div class="input-group">
+                            <label>Of First %</label>
+                            <input type="number" id="tier1UpTo" value="3" min="0" max="100" step="0.5">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="input-group">
+                            <label>Tier 2: Match %</label>
+                            <input type="number" id="tier2Match" value="50" min="0" max="200">
+                        </div>
+                        <div class="input-group">
+                            <label>Of Next %</label>
+                            <input type="number" id="tier2UpTo" value="2" min="0" max="100" step="0.5">
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <div class="input-group">
+                    <label for="currentContrib">Your Current Contribution (%)</label>
+                    <input type="number" id="currentContrib" value="6" min="0" max="100" step="0.5">
+                </div>
+                <div class="input-group">
+                    <label for="age401k">Your Age</label>
+                    <input type="number" id="age401k" value="35" min="18" max="80">
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Optimize Match
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Annual Employer Match</p>
+                    <p class="text-3xl font-bold mt-1" id="annualMatch">$0</p>
+                    <p class="text-sm opacity-80 mt-1" id="matchPctResult">0% of salary</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Free Money You're Missing</p>
+                    <p class="text-3xl font-bold text-red-600" id="missingMatch">$0</p>
+                    <p class="text-sm text-gray-500 mt-1" id="missingDetail">per year</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Your Contribution</p>
+                    <p class="text-xl font-bold" id="yourContrib">$0</p>
+                    <p class="text-xs text-gray-400" id="perPaycheck">per paycheck: $0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Max Match at</p>
+                    <p class="text-xl font-bold text-brand-500" id="optimalPct">0%</p>
+                    <p class="text-xs text-gray-400" id="optimalAmt">$0/year</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">2026 Max Allowed</p>
+                    <p class="text-xl font-bold" id="maxAllowed">$0</p>
+                    <p class="text-xs text-gray-400" id="catchUpNote"></p>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Match by Contribution %</h3>
+                <canvas id="matchChart" height="250"></canvas>
+            </div>
+
+            <!-- 30-year projection -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">30-Year Impact of Full Match</h3>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600">With Full Match (30 yrs, 7% return)</p>
+                        <p class="text-2xl font-bold text-green-700" id="futureWithMatch">$0</p>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600">Without Employer Match</p>
+                        <p class="text-2xl font-bold text-red-700" id="futureWithoutMatch">$0</p>
+                    </div>
+                </div>
+                <p class="text-center text-lg font-bold">Match adds <span class="text-green-600" id="matchBonus">$0</span> to your retirement</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>Don't Leave Free Money on the Table</h2>
+        <p>An employer 401(k) match is essentially a guaranteed, immediate 50-100% return on your investment. No other investment comes close. If your employer matches 100% up to 6% of your salary, contributing less than 6% means you're literally turning down free money.</p>
+
+        <h3>2026 Contribution Limits</h3>
+        <ul>
+            <li><strong>Under 50:</strong> $23,500 employee limit</li>
+            <li><strong>Ages 50-59 and 64+:</strong> $31,000 (with $7,500 catch-up)</li>
+            <li><strong>Ages 60-63:</strong> $34,750 (with $11,250 super catch-up)</li>
+            <li><strong>Total (employee + employer):</strong> $70,000</li>
+        </ul>
+
+        <h3>Common Match Formulas</h3>
+        <ul>
+            <li><strong>100% of first 6%:</strong> Most generous common match. Contribute 6% to get full match.</li>
+            <li><strong>50% of first 6%:</strong> Very common. Still contribute 6% to maximize — you get 3% free.</li>
+            <li><strong>100% of first 3%, 50% of next 2%:</strong> Tiered match. Contribute 5% to maximize — you get 4% free.</li>
+            <li><strong>Dollar-for-dollar up to 3%:</strong> Simple but less generous. Contribute 3% minimum.</li>
+        </ul>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "401(k) Employer Match Optimizer",
+    "url": "https://www.rsfundmanagement.com/niche_calc/401k-optimizer",
+    "description": "Calculate how much to contribute to maximize your employer 401(k) match. Don't leave free money on the table.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// 2026 limits
+const LIMIT_UNDER_50 = 23500;
+const LIMIT_50_59 = 31000;
+const LIMIT_60_63 = 34750;
+const LIMIT_TOTAL = 70000;
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function toggleMatchInputs() {
+    const type = document.getElementById('matchType').value;
+    document.getElementById('simpleMatch').style.display = type === 'simple' ? 'block' : 'none';
+    document.getElementById('tieredMatch').style.display = type === 'tiered' ? 'block' : 'none';
+    calculate();
+}
+
+function getEmployerMatch(contribPct, salary) {
+    const type = document.getElementById('matchType').value;
+
+    if (type === 'simple') {
+        const matchRate = parseFloat(document.getElementById('matchPct').value) / 100;
+        const upTo = parseFloat(document.getElementById('matchUpTo').value) / 100;
+        const eligible = Math.min(contribPct / 100, upTo) * salary;
+        return eligible * matchRate;
+    } else {
+        const t1Rate = parseFloat(document.getElementById('tier1Match').value) / 100;
+        const t1UpTo = parseFloat(document.getElementById('tier1UpTo').value) / 100;
+        const t2Rate = parseFloat(document.getElementById('tier2Match').value) / 100;
+        const t2UpTo = parseFloat(document.getElementById('tier2UpTo').value) / 100;
+
+        const contribDec = contribPct / 100;
+        const tier1 = Math.min(contribDec, t1UpTo) * salary * t1Rate;
+        const tier2 = Math.max(0, Math.min(contribDec - t1UpTo, t2UpTo)) * salary * t2Rate;
+        return tier1 + tier2;
+    }
+}
+
+let chart = null;
+
+function calculate() {
+    const salary = parseFloat(document.getElementById('salary').value) || 0;
+    const payFreq = parseInt(document.getElementById('payFreq').value);
+    const currentPct = parseFloat(document.getElementById('currentContrib').value) || 0;
+    const age = parseInt(document.getElementById('age401k').value);
+
+    // Determine contribution limit
+    let empLimit = LIMIT_UNDER_50;
+    let catchUp = '';
+    if (age >= 60 && age <= 63) {
+        empLimit = LIMIT_60_63;
+        catchUp = 'Super catch-up: +$11,250';
+    } else if (age >= 50) {
+        empLimit = LIMIT_50_59;
+        catchUp = 'Catch-up: +$7,500';
+    }
+
+    // Find optimal contribution percentage
+    let maxMatch = 0, optPct = 0;
+    for (let p = 0; p <= 100; p += 0.5) {
+        const m = getEmployerMatch(p, salary);
+        if (m > maxMatch) { maxMatch = m; optPct = p; }
+        if (m === maxMatch && p > optPct) break; // No more gains
+    }
+    // Find exact point where match maxes out
+    for (let p = optPct; p <= 100; p += 0.5) {
+        if (getEmployerMatch(p, salary) > maxMatch) { maxMatch = getEmployerMatch(p, salary); optPct = p; }
+    }
+
+    const currentMatch = getEmployerMatch(currentPct, salary);
+    const missingMatch = maxMatch - currentMatch;
+    const yourContrib = Math.min(salary * currentPct / 100, empLimit);
+
+    document.getElementById('annualMatch').textContent = fmt(currentMatch);
+    document.getElementById('matchPctResult').textContent = `${(currentMatch / salary * 100).toFixed(1)}% of salary`;
+    document.getElementById('missingMatch').textContent = fmt(missingMatch);
+    document.getElementById('missingDetail').textContent = missingMatch > 0 ? `${fmt(missingMatch)} per year left on table!` : "You're getting the full match!";
+    document.getElementById('yourContrib').textContent = fmt(yourContrib);
+    document.getElementById('perPaycheck').textContent = `per paycheck: ${fmt(yourContrib / payFreq)}`;
+    document.getElementById('optimalPct').textContent = `${optPct}%`;
+    document.getElementById('optimalAmt').textContent = `${fmt(salary * optPct / 100)}/year`;
+    document.getElementById('maxAllowed').textContent = fmt(empLimit);
+    document.getElementById('catchUpNote').textContent = catchUp;
+
+    // Chart: match by contribution %
+    const labels = [], matchData = [], contribData = [];
+    for (let p = 0; p <= 30; p++) {
+        labels.push(`${p}%`);
+        matchData.push(Math.round(getEmployerMatch(p, salary)));
+        contribData.push(Math.round(Math.min(salary * p / 100, empLimit)));
+    }
+
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('matchChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Employer Match',
+                    data: matchData,
+                    backgroundColor: 'rgba(22,163,74,0.6)',
+                    borderColor: '#16a34a',
+                    borderWidth: 1,
+                },
+                {
+                    label: 'Your Contribution',
+                    data: contribData,
+                    backgroundColor: 'rgba(30,64,175,0.3)',
+                    borderColor: '#1e40af',
+                    borderWidth: 1,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: 'Your Contribution %' } },
+                y: { title: { display: true, text: 'Annual Amount' }, ticks: { callback: v => fmt(v) } }
+            },
+            plugins: {
+                tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } },
+                annotation: {}
+            }
+        }
+    });
+
+    // 30-year projection
+    const growth = 0.07;
+    const optContrib = Math.min(salary * optPct / 100, empLimit);
+    let withMatch = 0, withoutMatch = 0;
+    for (let y = 0; y < 30; y++) {
+        withMatch = (withMatch + optContrib + maxMatch) * (1 + growth);
+        withoutMatch = (withoutMatch + optContrib) * (1 + growth);
+    }
+    document.getElementById('futureWithMatch').textContent = fmt(withMatch);
+    document.getElementById('futureWithoutMatch').textContent = fmt(withoutMatch);
+    document.getElementById('matchBonus').textContent = fmt(withMatch - withoutMatch);
+}
+
+document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('change', calculate);
+    el.addEventListener('input', calculate);
+});
+calculate();
+</script>
+{% endblock %}

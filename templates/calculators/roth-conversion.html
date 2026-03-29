@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Roth Conversion Ladder Planner{% endblock %}
+{% block description %}Plan your Roth conversion ladder to minimize lifetime taxes. See how much to convert each year to fill tax brackets optimally.{% endblock %}
+{% block keywords %}roth conversion calculator, roth conversion ladder, roth ira conversion planner, traditional to roth conversion, roth conversion tax{% endblock %}
+{% block canonical %}/niche_calc/roth-conversion{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Roth Conversion Ladder</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Roth Conversion Ladder Planner</h1>
+                <p class="text-gray-600 mt-2">Optimize yearly conversions to minimize your lifetime tax bill.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="input-group">
+                    <label for="tradBalance">Traditional IRA/401(k) Balance ($)</label>
+                    <input type="number" id="tradBalance" value="500000" min="0" step="10000">
+                </div>
+                <div class="input-group">
+                    <label for="rothBalance">Current Roth IRA Balance ($)</label>
+                    <input type="number" id="rothBalance" value="50000" min="0" step="5000">
+                </div>
+                <div class="input-group">
+                    <label for="currentAge2">Current Age</label>
+                    <input type="number" id="currentAge2" value="45" min="25" max="85">
+                </div>
+                <div class="input-group">
+                    <label for="retireAge2">Retirement Age (start withdrawals)</label>
+                    <input type="number" id="retireAge2" value="60" min="30" max="90">
+                </div>
+                <div class="input-group">
+                    <label for="otherIncome2">Other Annual Income During Conversion Period ($)</label>
+                    <input type="number" id="otherIncome2" value="30000" min="0" step="5000">
+                    <p class="text-xs text-gray-500 mt-1">Part-time work, rental income, etc.</p>
+                </div>
+                <div class="input-group">
+                    <label for="filingStatus2">Filing Status</label>
+                    <select id="filingStatus2">
+                        <option value="single">Single</option>
+                        <option value="married">Married Filing Jointly</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="targetBracket">Target Tax Bracket to Fill</label>
+                    <select id="targetBracket">
+                        <option value="12">12% bracket</option>
+                        <option value="22" selected>22% bracket</option>
+                        <option value="24">24% bracket</option>
+                        <option value="32">32% bracket</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="growthRate">Expected Growth Rate (%)</label>
+                    <input type="number" id="growthRate" value="7" min="0" max="15" step="0.5">
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Plan Conversions
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Total Tax on Conversions</p>
+                    <p class="text-2xl font-bold mt-1" id="totalConvTax">$0</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Annual Conversion Amount</p>
+                    <p class="text-2xl font-bold text-brand-500" id="annualConv">$0</p>
+                    <p class="text-xs text-gray-500 mt-1" id="convYears">over 0 years</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Tax Savings vs No Conversion</p>
+                    <p class="text-2xl font-bold text-green-600" id="taxSavings">$0</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Conversion Schedule</h3>
+                <canvas id="rothChart" height="250"></canvas>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Year-by-Year Plan</h3>
+                <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 bg-white">
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-2 px-2">Year</th>
+                                <th class="text-left py-2 px-2">Age</th>
+                                <th class="text-right py-2 px-2">Convert</th>
+                                <th class="text-right py-2 px-2">Tax Owed</th>
+                                <th class="text-right py-2 px-2">Trad Bal</th>
+                                <th class="text-right py-2 px-2">Roth Bal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="convTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <h4 class="font-bold text-blue-900 mb-2">5-Year Rule Reminder</h4>
+                <p class="text-sm text-blue-800">Roth conversions have a 5-year seasoning period. Each conversion must wait 5 years before you can withdraw the converted amount penalty-free (if under 59.5). Plan your ladder to start conversions at least 5 years before you need the funds.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>What is a Roth Conversion Ladder?</h2>
+        <p>A Roth conversion ladder is a tax strategy where you systematically convert Traditional IRA/401(k) funds to a Roth IRA over several years, carefully controlling the amount each year to stay within a target tax bracket. This is especially powerful for early retirees who have a "gap" between retirement and Social Security/RMD age.</p>
+
+        <h3>Why Convert?</h3>
+        <ul>
+            <li><strong>Tax arbitrage:</strong> Convert during low-income years (early retirement) to pay less tax than you would later when RMDs force distributions</li>
+            <li><strong>No RMDs:</strong> Roth IRAs have no required minimum distributions, giving you more control</li>
+            <li><strong>Tax-free growth:</strong> Once in Roth, all future growth and withdrawals are tax-free</li>
+            <li><strong>Estate planning:</strong> Roth IRAs pass to heirs tax-free</li>
+        </ul>
+
+        <h3>The 5-Year Rule</h3>
+        <p>Each Roth conversion has its own 5-year clock. You can withdraw the converted principal penalty-free after 5 years (or after age 59.5, whichever comes first). This is why it's called a "ladder" — you start conversions 5+ years before you need access.</p>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Roth Conversion Ladder Planner",
+    "url": "https://www.rsfundmanagement.com/niche_calc/roth-conversion",
+    "description": "Plan optimal Roth conversion amounts each year to minimize lifetime tax burden.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// 2026 federal tax brackets
+const BRACKETS = {
+    single: [
+        { limit: 11925, rate: 10 }, { limit: 48475, rate: 12 },
+        { limit: 103350, rate: 22 }, { limit: 197300, rate: 24 },
+        { limit: 250525, rate: 32 }, { limit: 626350, rate: 35 },
+        { limit: Infinity, rate: 37 }
+    ],
+    married: [
+        { limit: 23850, rate: 10 }, { limit: 96950, rate: 12 },
+        { limit: 206700, rate: 22 }, { limit: 394600, rate: 24 },
+        { limit: 501050, rate: 32 }, { limit: 751600, rate: 35 },
+        { limit: Infinity, rate: 37 }
+    ]
+};
+
+const STANDARD_DEDUCTION = { single: 15700, married: 31400 };
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function calcTax(taxableIncome, filing) {
+    const brackets = BRACKETS[filing];
+    let tax = 0, prev = 0;
+    for (const b of brackets) {
+        const width = b.limit - prev;
+        const taxable = Math.min(Math.max(taxableIncome - prev, 0), width);
+        tax += taxable * b.rate / 100;
+        prev = b.limit;
+        if (taxableIncome <= b.limit) break;
+    }
+    return tax;
+}
+
+function getConversionRoom(otherIncome, filing, targetBracketRate) {
+    const brackets = BRACKETS[filing];
+    const deduction = STANDARD_DEDUCTION[filing];
+    const adjustedIncome = Math.max(0, otherIncome - deduction);
+
+    // Find the top of the target bracket
+    let bracketTop = 0;
+    for (const b of brackets) {
+        if (b.rate <= targetBracketRate) bracketTop = b.limit;
+    }
+
+    return Math.max(0, bracketTop - adjustedIncome);
+}
+
+let chart = null;
+
+function calculate() {
+    const tradBal = parseFloat(document.getElementById('tradBalance').value) || 0;
+    const rothBal = parseFloat(document.getElementById('rothBalance').value) || 0;
+    const currentAge = parseInt(document.getElementById('currentAge2').value);
+    const retireAge = parseInt(document.getElementById('retireAge2').value);
+    const otherIncome = parseFloat(document.getElementById('otherIncome2').value) || 0;
+    const filing = document.getElementById('filingStatus2').value;
+    const targetBracket = parseInt(document.getElementById('targetBracket').value);
+    const growth = parseFloat(document.getElementById('growthRate').value) / 100;
+
+    const deduction = STANDARD_DEDUCTION[filing];
+    const conversionYears = Math.max(1, retireAge - currentAge);
+    const annualRoom = getConversionRoom(otherIncome, filing, targetBracket);
+
+    let trad = tradBal, roth = rothBal;
+    let totalTax = 0;
+    const rows = [];
+    const tradData = [tradBal], rothData = [rothBal], taxData = [];
+    const labels = [`${currentAge}`];
+
+    for (let y = 1; y <= conversionYears; y++) {
+        const age = currentAge + y;
+
+        // Grow both accounts
+        trad *= (1 + growth);
+        roth *= (1 + growth);
+
+        // Convert up to the room available (or remaining trad balance)
+        const convAmount = Math.min(annualRoom, trad);
+        const taxableIncome = Math.max(0, otherIncome - deduction) + convAmount;
+        const taxOnConv = calcTax(taxableIncome, filing) - calcTax(Math.max(0, otherIncome - deduction), filing);
+
+        trad -= convAmount;
+        roth += convAmount;
+        totalTax += taxOnConv;
+
+        labels.push(`${age}`);
+        tradData.push(Math.round(trad));
+        rothData.push(Math.round(roth));
+        taxData.push(Math.round(taxOnConv));
+
+        rows.push(`<tr class="border-b border-gray-100">
+            <td class="py-1.5 px-2">${2026 + y - 1}</td>
+            <td class="py-1.5 px-2">${age}</td>
+            <td class="text-right py-1.5 px-2 font-medium">${fmt(convAmount)}</td>
+            <td class="text-right py-1.5 px-2 text-red-600">${fmt(taxOnConv)}</td>
+            <td class="text-right py-1.5 px-2">${fmt(trad)}</td>
+            <td class="text-right py-1.5 px-2 text-green-700">${fmt(roth)}</td>
+        </tr>`);
+    }
+
+    // No-conversion scenario: all stays in trad, taxed at withdrawal at marginal rate
+    let tradNoConv = tradBal * Math.pow(1 + growth, conversionYears);
+    // Assume withdrawal taxed at 24% marginal (conservative for large trad balances)
+    const noConvTax = tradNoConv * 0.24;
+    const savings = noConvTax - totalTax;
+
+    document.getElementById('totalConvTax').textContent = fmt(totalTax);
+    document.getElementById('annualConv').textContent = fmt(annualRoom);
+    document.getElementById('convYears').textContent = `over ${conversionYears} years`;
+    document.getElementById('taxSavings').textContent = fmt(Math.max(0, savings));
+    document.getElementById('convTable').innerHTML = rows.join('');
+
+    // Chart
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('rothChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels.slice(1),
+            datasets: [
+                {
+                    label: 'Traditional Balance',
+                    data: tradData.slice(1),
+                    backgroundColor: 'rgba(239,68,68,0.3)',
+                    borderColor: '#ef4444',
+                    borderWidth: 1,
+                    type: 'line',
+                    tension: 0.3,
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'Roth Balance',
+                    data: rothData.slice(1),
+                    backgroundColor: 'rgba(22,163,74,0.3)',
+                    borderColor: '#16a34a',
+                    borderWidth: 1,
+                    type: 'line',
+                    tension: 0.3,
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'Tax Paid',
+                    data: taxData,
+                    backgroundColor: 'rgba(251,191,36,0.6)',
+                    borderColor: '#f59e0b',
+                    borderWidth: 1,
+                    yAxisID: 'y1',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: 'Age' } },
+                y: {
+                    position: 'left',
+                    title: { display: true, text: 'Balance' },
+                    ticks: { callback: v => fmt(v) }
+                },
+                y1: {
+                    position: 'right',
+                    title: { display: true, text: 'Tax Paid' },
+                    ticks: { callback: v => fmt(v) },
+                    grid: { drawOnChartArea: false }
+                }
+            },
+            plugins: {
+                tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } }
+            }
+        }
+    });
+}
+
+document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('change', calculate);
+    el.addEventListener('input', calculate);
+});
+calculate();
+</script>
+{% endblock %}

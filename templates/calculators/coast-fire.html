@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Coast FIRE Calculator{% endblock %}
+{% block description %}Calculate your Coast FIRE number — the amount you need saved today to stop contributing and still reach financial independence by traditional retirement age.{% endblock %}
+{% block keywords %}coast fire calculator, coast fire number, early retirement calculator, financial independence calculator, coast to retirement{% endblock %}
+{% block canonical %}/niche_calc/coast-fire{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/niche_calc" class="hover:text-brand-500">Calculators</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Coast FIRE Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-5 gap-8">
+        <!-- Inputs -->
+        <div class="lg:col-span-2 space-y-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Coast FIRE Calculator</h1>
+                <p class="text-gray-600 mt-2">Find when you can stop saving and let compound interest do the work.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="input-group">
+                    <label for="currentAge">Current Age</label>
+                    <input type="number" id="currentAge" value="30" min="18" max="80">
+                </div>
+                <div class="input-group">
+                    <label for="retireAge">Target Retirement Age</label>
+                    <input type="number" id="retireAge" value="65" min="30" max="90">
+                </div>
+                <div class="input-group">
+                    <label for="currentSavings">Current Retirement Savings ($)</label>
+                    <input type="number" id="currentSavings" value="100000" min="0" step="5000">
+                </div>
+                <div class="input-group">
+                    <label for="annualSpending">Desired Annual Spending in Retirement ($)</label>
+                    <input type="number" id="annualSpending" value="50000" min="0" step="1000">
+                </div>
+                <div class="input-group">
+                    <label for="swr">Safe Withdrawal Rate (%)</label>
+                    <input type="number" id="swr" value="4" min="1" max="10" step="0.25">
+                    <p class="text-xs text-gray-500 mt-1">Trinity Study default: 4%</p>
+                </div>
+                <div class="input-group">
+                    <label for="realReturn">Expected Real Return (after inflation) (%)</label>
+                    <input type="number" id="realReturn" value="7" min="1" max="15" step="0.5">
+                    <p class="text-xs text-gray-500 mt-1">S&P 500 historical avg: ~7% real</p>
+                </div>
+                <div class="input-group">
+                    <label for="monthlyContrib">Current Monthly Contribution ($)</label>
+                    <input type="number" id="monthlyContrib" value="1500" min="0" step="100">
+                </div>
+
+                <button onclick="calculate()" class="w-full bg-brand-500 text-white py-3 rounded-lg font-bold hover:bg-brand-600 transition mt-4">
+                    Calculate Coast FIRE
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="lg:col-span-3 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="result-card rounded-xl p-5 text-white">
+                    <p class="text-sm opacity-80">Your FIRE Number</p>
+                    <p class="text-3xl font-bold mt-1" id="fireNumber">$0</p>
+                    <p class="text-sm opacity-80 mt-1">portfolio needed at retirement</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Coast FIRE Number</p>
+                    <p class="text-3xl font-bold text-brand-500" id="coastNumber">$0</p>
+                    <p class="text-sm text-gray-500 mt-1">needed today to coast</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-xl shadow-md p-5" id="statusCard">
+                    <p class="text-sm text-gray-500">Coast FIRE Status</p>
+                    <p class="text-2xl font-bold mt-1" id="statusText">Calculating...</p>
+                    <p class="text-sm text-gray-500 mt-1" id="statusDetail"></p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-5">
+                    <p class="text-sm text-gray-500">Coast FIRE Age</p>
+                    <p class="text-2xl font-bold text-green-600 mt-1" id="coastAge">--</p>
+                    <p class="text-sm text-gray-500 mt-1" id="coastYearsAway">with current contributions</p>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Portfolio Growth Projection</h3>
+                <canvas id="coastChart" height="250"></canvas>
+            </div>
+
+            <!-- Milestone Table -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="font-bold text-gray-900 mb-4">Age Milestones</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-2 px-2">Age</th>
+                                <th class="text-right py-2 px-2">With Contributions</th>
+                                <th class="text-right py-2 px-2">Coasting (no contributions)</th>
+                                <th class="text-right py-2 px-2">Coast FIRE Target</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO Content -->
+    <div class="max-w-4xl mx-auto mt-16 prose prose-lg">
+        <h2>What is Coast FIRE?</h2>
+        <p>Coast FIRE (Financial Independence, Retire Early) is a milestone where your current retirement savings, if left untouched, will grow to support your retirement by a target age without any additional contributions. Once you reach your Coast FIRE number, you only need to earn enough to cover current living expenses.</p>
+
+        <h3>How Coast FIRE Differs from Regular FIRE</h3>
+        <ul>
+            <li><strong>Regular FIRE:</strong> Save aggressively until your portfolio can sustain your lifestyle through withdrawals (typically 25x annual spending)</li>
+            <li><strong>Coast FIRE:</strong> Save until compound interest alone will grow your portfolio to your FIRE number by retirement age</li>
+            <li><strong>Barista FIRE:</strong> Similar to Coast FIRE but you also withdraw a small amount, supplemented by part-time work</li>
+        </ul>
+
+        <h3>The Coast FIRE Formula</h3>
+        <p>Coast FIRE Number = FIRE Number / (1 + real return rate) ^ (retirement age - current age)</p>
+        <p>Where FIRE Number = Annual Spending / Safe Withdrawal Rate</p>
+
+        <h3>Key Assumptions</h3>
+        <p>This calculator uses inflation-adjusted (real) returns, so the numbers are in today's dollars. The default 7% real return reflects the historical average of the S&P 500 after inflation. The 4% safe withdrawal rate is based on the Trinity Study, which found that a diversified portfolio historically survived 30-year withdrawal periods at this rate with high probability.</p>
+    </div>
+</section>
+
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Coast FIRE Calculator",
+    "url": "https://www.rsfundmanagement.com/niche_calc/coast-fire",
+    "description": "Calculate your Coast FIRE number to find when you can stop saving for retirement and let compound interest do the rest.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let chart = null;
+
+function fmt(n) {
+    return '$' + Math.round(n).toLocaleString('en-US');
+}
+
+function calculate() {
+    const currentAge = parseInt(document.getElementById('currentAge').value);
+    const retireAge = parseInt(document.getElementById('retireAge').value);
+    const currentSavings = parseFloat(document.getElementById('currentSavings').value) || 0;
+    const annualSpending = parseFloat(document.getElementById('annualSpending').value) || 0;
+    const swr = parseFloat(document.getElementById('swr').value) / 100;
+    const realReturn = parseFloat(document.getElementById('realReturn').value) / 100;
+    const monthlyContrib = parseFloat(document.getElementById('monthlyContrib').value) || 0;
+
+    const yearsToRetire = retireAge - currentAge;
+    const fireNumber = annualSpending / swr;
+    const coastNumber = fireNumber / Math.pow(1 + realReturn, yearsToRetire);
+
+    // Find Coast FIRE age (when portfolio with contributions reaches coast number for remaining years)
+    let coastAge = null;
+    let balContrib = currentSavings;
+    let balCoast = currentSavings; // coasting from today
+
+    const labelsArr = [currentAge.toString()];
+    const contribData = [currentSavings];
+    const coastData = [currentSavings];
+    const targetLine = [];
+
+    for (let y = 0; y <= yearsToRetire; y++) {
+        const age = currentAge + y;
+        const yearsRemaining = retireAge - age;
+        const coastTargetAtAge = fireNumber / Math.pow(1 + realReturn, yearsRemaining);
+
+        targetLine.push(Math.round(coastTargetAtAge));
+
+        if (y > 0) {
+            // With contributions
+            for (let m = 0; m < 12; m++) {
+                balContrib = balContrib * (1 + realReturn / 12) + monthlyContrib;
+            }
+            // Coasting (no contributions from today)
+            balCoast = balCoast * (1 + realReturn);
+
+            labelsArr.push(age.toString());
+            contribData.push(Math.round(balContrib));
+            coastData.push(Math.round(balCoast));
+        }
+
+        if (!coastAge && balContrib >= coastTargetAtAge && y > 0) {
+            coastAge = age;
+        }
+    }
+
+    // Update results
+    document.getElementById('fireNumber').textContent = fmt(fireNumber);
+    document.getElementById('coastNumber').textContent = fmt(coastNumber);
+
+    const alreadyCoast = currentSavings >= coastNumber;
+    const statusText = document.getElementById('statusText');
+    const statusDetail = document.getElementById('statusDetail');
+    const statusCard = document.getElementById('statusCard');
+
+    if (alreadyCoast) {
+        statusText.textContent = "You're Coast FIRE!";
+        statusText.className = 'text-2xl font-bold mt-1 text-green-600';
+        statusDetail.textContent = 'You can stop contributing and still retire on time.';
+    } else {
+        const deficit = coastNumber - currentSavings;
+        statusText.textContent = fmt(deficit) + ' away';
+        statusText.className = 'text-2xl font-bold mt-1 text-orange-600';
+        statusDetail.textContent = 'Keep saving to reach Coast FIRE.';
+    }
+
+    if (coastAge) {
+        document.getElementById('coastAge').textContent = coastAge;
+        document.getElementById('coastYearsAway').textContent = `${coastAge - currentAge} years from now`;
+    } else if (alreadyCoast) {
+        document.getElementById('coastAge').textContent = currentAge;
+        document.getElementById('coastYearsAway').textContent = 'Already there!';
+    } else {
+        document.getElementById('coastAge').textContent = '> ' + retireAge;
+        document.getElementById('coastYearsAway').textContent = 'Increase contributions';
+    }
+
+    // Table
+    const rows = [];
+    for (let y = 0; y <= yearsToRetire; y += 5) {
+        if (y === 0 && yearsToRetire > 5) continue;
+        const idx = y;
+        if (idx < labelsArr.length) {
+            rows.push(`<tr class="border-b border-gray-100 ${currentAge + y === coastAge ? 'bg-green-50' : ''}">
+                <td class="py-2 px-2 font-medium">${labelsArr[idx]}${currentAge + y === coastAge ? ' <span class="text-green-600 text-xs">COAST!</span>' : ''}</td>
+                <td class="text-right py-2 px-2">${fmt(contribData[idx])}</td>
+                <td class="text-right py-2 px-2">${fmt(coastData[idx])}</td>
+                <td class="text-right py-2 px-2 text-gray-500">${fmt(targetLine[idx])}</td>
+            </tr>`);
+        }
+    }
+    // Always show final year
+    const lastIdx = labelsArr.length - 1;
+    if (lastIdx > 0) {
+        rows.push(`<tr class="border-b-2 border-gray-300 font-bold">
+            <td class="py-2 px-2">${labelsArr[lastIdx]} (retire)</td>
+            <td class="text-right py-2 px-2 text-green-700">${fmt(contribData[lastIdx])}</td>
+            <td class="text-right py-2 px-2">${fmt(coastData[lastIdx])}</td>
+            <td class="text-right py-2 px-2 text-gray-500">${fmt(fireNumber)}</td>
+        </tr>`);
+    }
+    document.getElementById('tableBody').innerHTML = rows.join('');
+
+    // Chart
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('coastChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labelsArr,
+            datasets: [
+                {
+                    label: 'With Contributions',
+                    data: contribData,
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(22,163,74,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                },
+                {
+                    label: 'Coasting (no new savings)',
+                    data: coastData,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245,158,11,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderDash: [5, 5],
+                },
+                {
+                    label: 'Coast FIRE Target',
+                    data: targetLine,
+                    borderColor: '#6b7280',
+                    borderDash: [2, 4],
+                    pointRadius: 0,
+                    fill: false,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Age' } },
+                y: { title: { display: true, text: 'Portfolio Value' }, ticks: { callback: v => fmt(v) } }
+            }
+        }
+    });
+}
+
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+calculate();
+</script>
+{% endblock %}
